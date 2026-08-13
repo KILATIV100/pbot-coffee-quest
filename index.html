@@ -1,1 +1,210 @@
-PLACEHOLDER
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"/>
+<meta name="theme-color" content="#07080f"/>
+<title>Perk UP · P-BOT: Coffee Quest</title>
+<script src="sprites.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;user-select:none}
+html,body{width:100%;height:100%;overflow:hidden;background:#07080f;color:#f2f0ea;font-family:system-ui,sans-serif}
+#shell{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#05060a}
+#stage{position:relative;width:min(100vw,56.25vh);height:min(100vh,177.78vw);max-height:100dvh;background:#0a0c14;overflow:hidden}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+#ui{position:absolute;inset:0;pointer-events:none;z-index:5}
+#ui .panel{pointer-events:auto}
+.hud{position:absolute;top:0;left:0;right:0;padding:max(8px,env(safe-area-inset-top)) 10px 0;display:flex;justify-content:space-between;gap:8px}
+.pill{display:flex;align-items:center;gap:6px;background:rgba(7,8,15,.82);border:1px solid rgba(255,255,255,.1);border-radius:12px;padding:6px 10px;font-size:13px;font-weight:700}
+.pill img{height:18px}
+.controls{position:absolute;left:0;right:0;bottom:0;height:22%;min-height:110px;padding:8px 12px max(10px,env(safe-area-inset-bottom));display:flex;justify-content:space-between;align-items:flex-end;background:linear-gradient(180deg,transparent,rgba(5,6,10,.92));pointer-events:none}
+.controls .group{display:flex;gap:10px;pointer-events:auto}
+.btn{width:64px;height:64px;border-radius:18px;border:1px solid rgba(255,255,255,.18);background:rgba(20,24,40,.78);color:#f2f0ea;font-size:28px;font-weight:800;display:flex;align-items:center;justify-content:center}
+.btn.wide{width:88px;flex-direction:column;font-size:11px;text-transform:uppercase}
+.btn.wide span{font-size:26px}
+.btn:active,.btn.held{background:rgba(62,200,180,.45);border-color:rgba(62,200,180,.8)}
+.overlay{position:absolute;inset:0;background:rgba(5,6,10,.88);display:flex;flex-direction:column;align-items:center;justify-content:flex-end;padding:16px;gap:12px;overflow-y:auto}
+.card{width:100%;max-width:420px;background:rgba(18,22,36,.96);border:1px solid rgba(62,200,180,.28);border-radius:18px;padding:16px}
+.card h1{font-size:1.35rem;margin:.25rem 0}
+.card h2{font-size:1.15rem}
+.card p{font-size:.9rem;line-height:1.45;color:#b8b6ae;margin:.35rem 0}
+.tag{font-size:10px;font-weight:800;letter-spacing:.14em;text-transform:uppercase;color:#3ec8b4}
+.logo{height:44px;margin-bottom:8px}
+.primary{width:100%;min-height:48px;border:none;border-radius:14px;background:#3ec8b4;color:#061018;font-weight:800;font-size:15px;margin-top:10px}
+.ghost{width:100%;min-height:40px;border:1px solid rgba(255,255,255,.12);border-radius:12px;background:transparent;color:#b8b6ae;font-weight:600;margin-top:6px}
+.levels{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+.lvl{display:flex;align-items:center;gap:12px;padding:12px;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(10,12,20,.8);color:inherit;text-align:left;width:100%}
+.lvl .n{width:36px;height:36px;border-radius:10px;background:#0a0c14;border:1px solid rgba(62,200,180,.35);display:flex;align-items:center;justify-content:center;font-weight:900;color:#3ec8b4}
+.hidden{display:none!important}
+.story-toast{position:absolute;top:52px;left:50%;transform:translateX(-50%);max-width:90%;background:rgba(7,8,15,.75);border:1px solid rgba(62,200,180,.3);border-radius:10px;padding:6px 12px;font-size:11px;color:#3ec8b4;text-align:center;pointer-events:none}
+</style>
+</head>
+<body>
+<div id="shell"><div id="stage">
+<canvas id="c"></canvas>
+<div id="ui">
+  <div class="hud hidden" id="hud">
+    <div class="pill"><img id="hudLogo" alt="Perk UP"/><span id="hudLevel">Зміна 1</span></div>
+    <div style="display:flex;gap:6px">
+      <div class="pill">☕ <span id="hudBeans">0/0</span></div>
+      <div class="pill">❤ <span id="hudLives">3</span></div>
+    </div>
+  </div>
+  <div class="story-toast hidden" id="toast"></div>
+  <div class="controls hidden" id="controls">
+    <div class="group">
+      <button class="btn" id="btnL">◀</button>
+      <button class="btn" id="btnR">▶</button>
+    </div>
+    <div class="group">
+      <button class="btn wide" id="btnJ"><span>▲</span>Стриб</button>
+    </div>
+  </div>
+  <div class="overlay panel" id="menu">
+    <div class="card">
+      <img class="logo" id="menuLogo" alt="Perk UP"/>
+      <div class="tag">Perk UP · Офіційна гра</div>
+      <h1>P-BOT: Coffee Quest</h1>
+      <p>Капітан Декаф вимкнув ранковий драйв. Пройди станції, збери зерна й поверни місту енергію кави.</p>
+      <div class="levels">
+        <button class="lvl" data-lvl="0"><span class="n">1</span><span><b>Еспресо-Експрес</b><br><small style="color:#8a887e">Станція · реле · перша зміна</small></span></button>
+        <button class="lvl" data-lvl="1"><span class="n">2</span><span><b>Капучинові Хмари</b><br><small style="color:#8a887e">Піна · вітер · подвійний стрибок</small></span></button>
+      </div>
+    </div>
+  </div>
+  <div class="overlay panel hidden" id="brief">
+    <div class="card">
+      <img class="logo" id="briefLogo" alt="Perk UP"/>
+      <div class="tag" id="briefTag">Зміна 1</div>
+      <h2 id="briefTitle">Еспресо-Експрес</h2>
+      <p id="briefText"></p>
+      <p id="briefObj" style="color:#3ec8b4;font-weight:600"></p>
+      <button class="primary" id="btnStart">Почати зміну</button>
+      <button class="ghost" id="btnBack">До мапи</button>
+    </div>
+  </div>
+  <div class="overlay panel hidden" id="dead">
+    <div class="card">
+      <h2>Систему перезавантажено</h2>
+      <p>P-BOT впав. Спробуй ще раз.</p>
+      <button class="primary" id="btnRetry">Знову</button>
+      <button class="ghost" id="btnDeadMenu">Мапа</button>
+    </div>
+  </div>
+  <div class="overlay panel hidden" id="won">
+    <div class="card">
+      <div class="tag">Зміну закрито</div>
+      <h2 id="wonTitle">Готово!</h2>
+      <p id="wonText"></p>
+      <p id="wonBeans" style="color:#3ec8b4"></p>
+      <button class="primary" id="btnNext">Далі</button>
+      <button class="ghost" id="btnWonMenu">Мапа</button>
+    </div>
+  </div>
+</div>
+</div></div>
+<script>
+(()=>{
+const VW=540,VH=960;
+const canvas=document.getElementById('c');
+const ctx=canvas.getContext('2d');
+const $=id=>document.getElementById(id);
+const imgs={};
+function loadImgs(){
+  const list=['idle.png','jump.png','logo.png','run_0.png','run_1.png','run_2.png','run_3.png','run_4.png','run_5.png'];
+  return Promise.all(list.map(n=>new Promise(res=>{const i=new Image();i.onload=()=>{imgs[n]=i;res()};i.onerror=()=>res();i.src=(window.SPRITES&&window.SPRITES[n])||'';})));
+}
+const LEVELS=[
+{id:0,name:'Еспресо-Експрес',chapter:'Зміна 1',
+ briefing:'Капсула-Охоронець заварила рейки. Збери зерна й дійди до кавомашини.',
+ objective:'Чекпоінт · зерна · фініш',
+ outro:'Еспресо-Експрес знову гуде!',
+ width:3200,height:960,spawn:{x:70,y:800},
+ platforms:[{x:0,y:880,w:360,h:80},{x:420,y:780,w:130,h:22},{x:620,y:680,w:120,h:22},{x:820,y:760,w:140,h:22},{x:1040,y:880,w:260,h:80},{x:1100,y:700,w:100,h:18,kind:'oneway'},{x:1280,y:600,w:110,h:18,kind:'oneway'},{x:1480,y:520,w:100,h:20,kind:'bounce'},{x:1680,y:620,w:130,h:22,kind:'moving',moveY:100,speed:70},{x:1920,y:740,w:140,h:22},{x:2140,y:640,w:110,h:20,kind:'crumble'},{x:2360,y:560,w:120,h:22,kind:'moving',moveX:120,speed:75},{x:2680,y:760,w:150,h:22},{x:2900,y:880,w:300,h:80},{x:2960,y:700,w:110,h:18,kind:'oneway'}],
+ beans:[{x:460,y:720},{x:660,y:620},{x:880,y:700},{x:1140,y:640},{x:1320,y:540},{x:1520,y:460},{x:1740,y:540},{x:1960,y:680},{x:2180,y:580},{x:2420,y:500},{x:2720,y:700},{x:3000,y:640}],
+ spikes:[{x:380,y:856,w:40},{x:980,y:856,w:50},{x:1600,y:856,w:48},{x:2280,y:856,w:56},{x:2620,y:856,w:40}],
+ checkpoints:[{x:1120,y:830},{x:2720,y:710}],flag:{x:3050,y:800}},
+{id:1,name:'Капучинові Хмари',chapter:'Зміна 2',
+ briefing:'Піна-Голем збиває потоки. Літаючі платформи — твої друзі.',
+ objective:'Маяки · зерна · хмарна машина',
+ outro:'Маяки синхронізовані!',
+ width:3400,height:960,spawn:{x:60,y:800},
+ platforms:[{x:0,y:880,w:220,h:80},{x:280,y:760,w:110,h:22},{x:460,y:660,w:110,h:22},{x:640,y:540,w:120,h:22,kind:'moving',moveX:140,speed:80},{x:960,y:640,w:130,h:22},{x:1180,y:760,w:90,h:22},{x:1340,y:880,w:200,h:80},{x:1420,y:700,w:90,h:16,kind:'oneway'},{x:1580,y:580,w:90,h:16,kind:'oneway'},{x:1740,y:460,w:100,h:16,kind:'oneway'},{x:1920,y:540,w:100,h:20,kind:'bounce'},{x:2120,y:500,w:120,h:22,kind:'moving',moveY:120,speed:55},{x:2380,y:680,w:130,h:22},{x:2600,y:580,w:110,h:20,kind:'crumble'},{x:2800,y:500,w:120,h:22,kind:'moving',moveX:150,speed:90},{x:3120,y:740,w:140,h:22},{x:3280,y:880,w:120,h:80}],
+ beans:[{x:320,y:700},{x:500,y:600},{x:700,y:480},{x:1000,y:580},{x:1460,y:640},{x:1620,y:520},{x:1780,y:400},{x:1960,y:480},{x:2180,y:420},{x:2420,y:620},{x:2640,y:520},{x:2860,y:440},{x:3160,y:680}],
+ spikes:[{x:240,y:856,w:36},{x:1120,y:856,w:48},{x:1700,y:856,w:60},{x:2500,y:856,w:70},{x:3060,y:856,w:40}],
+ checkpoints:[{x:1400,y:830},{x:2420,y:630}],flag:{x:3320,y:800}}
+];
+let phase='menu',levelId=0,lives=3;
+let keys={l:false,r:false,j:false,jPressed:false};
+let player,plats,beans,spikes,checks,flag,cam={x:0,y:0};
+let runTimer=0,facing=1,coyote=0,jumpsLeft=2,jumpHeld=0,invuln=0,toastT=0;
+function resize(){const st=document.getElementById('stage');const r=st.getBoundingClientRect();const dpr=Math.min(2,devicePixelRatio||1);canvas.width=Math.floor(VW*dpr);canvas.height=Math.floor(VH*dpr);canvas.style.width=r.width+'px';canvas.style.height=r.height+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
+window.addEventListener('resize',resize);
+function solidify(L){plats=L.platforms.map(p=>({...p,ox:p.x,oy:p.y,t:Math.random()*10,alive:true,crumble:0}));beans=L.beans.map(b=>({...b,got:false,bob:Math.random()*6}));spikes=L.spikes.map(s=>({...s}));checks=L.checkpoints.map(c=>({...c,on:false}));flag={...L.flag,taken:false};player={x:L.spawn.x,y:L.spawn.y,vx:0,vy:0,w:36,h:52,onGround:false,spawn:{x:L.spawn.x,y:L.spawn.y}};runTimer=0;facing=1;coyote=0;jumpsLeft=2;invuln=0;}
+function openBrief(id){levelId=id;const L=LEVELS[id];$('briefTag').textContent=L.chapter+' · Брифінг';$('briefTitle').textContent=L.name;$('briefText').textContent=L.briefing;$('briefObj').textContent='Завдання: '+L.objective;show('brief');hide('menu','dead','won','controls','hud');phase='brief';}
+function begin(){solidify(LEVELS[levelId]);lives=3;phase='play';hide('menu','brief','dead','won');show('controls','hud');$('hudLevel').textContent=LEVELS[levelId].name;updateHud();}
+function goMenu(){phase='menu';show('menu');hide('brief','dead','won','controls','hud','toast');}
+function show(...ids){ids.forEach(id=>$(id).classList.remove('hidden'));}
+function hide(...ids){ids.forEach(id=>$(id).classList.add('hidden'));}
+function updateHud(){const total=beans.length,got=beans.filter(b=>b.got).length;$('hudBeans').textContent=got+'/'+total;$('hudLives').textContent=String(lives);}
+function toast(msg){toastT=3.2;$('toast').textContent=msg;$('toast').classList.remove('hidden');}
+function aabb(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y;}
+function update(dt){
+if(phase!=='play')return;
+if(toastT>0){toastT-=dt;if(toastT<=0)$('toast').classList.add('hidden');}
+if(invuln>0)invuln-=dt;
+for(const p of plats){if(!p.alive)continue;p.t+=dt;if(p.kind==='moving'){if(p.moveX)p.x=p.ox+Math.sin(p.t*p.speed/60)*p.moveX;if(p.moveY)p.y=p.oy+Math.sin(p.t*p.speed/60)*p.moveY;}if(p.kind==='crumble'&&p.crumble>0){p.crumble-=dt;if(p.crumble<=0)p.alive=false;}}
+const accel=3200,maxSp=240,friction=2000,grav=2000,jumpV=-680;
+let want=0;if(keys.l)want-=1;if(keys.r)want+=1;
+if(want!==0){player.vx+=want*accel*dt;facing=want;}else{const s=Math.sign(player.vx);player.vx-=s*friction*dt;if(Math.sign(player.vx)!==s)player.vx=0;}
+player.vx=Math.max(-maxSp,Math.min(maxSp,player.vx));player.vy+=grav*dt;if(player.vy>900)player.vy=900;
+if(player.onGround){coyote=0.14;jumpsLeft=2;}else coyote=Math.max(0,coyote-dt);
+if(keys.jPressed){keys.jPressed=false;if(coyote>0||jumpsLeft>0){if(coyote<=0)jumpsLeft=Math.max(0,jumpsLeft-1);else jumpsLeft=1;player.vy=jumpV;coyote=0;player.onGround=false;jumpHeld=0.22;}}
+if(keys.j&&jumpHeld>0&&player.vy<0){player.vy-=900*dt;jumpHeld-=dt;}else jumpHeld=0;
+player.x+=player.vx*dt;
+for(const p of plats){if(!p.alive)continue;const body={x:p.x,y:p.y,w:p.w,h:p.h};if(aabb(player,body)){if(player.vx>0)player.x=p.x-player.w;else if(player.vx<0)player.x=p.x+p.w;player.vx=0;}}
+player.y+=player.vy*dt;player.onGround=false;
+for(const p of plats){if(!p.alive)continue;if(p.kind==='oneway'&&(player.vy<0||player.y+player.h-player.vy*dt>p.y+4))continue;const body={x:p.x,y:p.y,w:p.w,h:p.h};if(aabb(player,body)){if(player.vy>0){player.y=p.y-player.h;player.vy=0;player.onGround=true;if(p.kind==='bounce'){player.vy=-820;player.onGround=false;jumpsLeft=2;}if(p.kind==='crumble'&&p.crumble===0)p.crumble=0.7;}else if(player.vy<0&&p.kind!=='oneway'){player.y=p.y+p.h;player.vy=0;}}}
+if(Math.abs(player.vx)>20&&player.onGround)runTimer+=dt;else if(player.onGround)runTimer=0;
+for(const b of beans){if(b.got)continue;b.bob+=dt*4;if(aabb(player,{x:b.x,y:b.y,w:22,h:22})){b.got=true;updateHud();}}
+if(invuln<=0){for(const s of spikes){if(aabb(player,{x:s.x,y:s.y,w:s.w,h:24})){hurt();break;}}}
+for(const c of checks){if(!c.on&&aabb(player,{x:c.x,y:c.y,w:36,h:40})){c.on=true;player.spawn={x:c.x,y:c.y-8};toast('Чекпоінт збережено');}}
+if(!flag.taken&&aabb(player,{x:flag.x,y:flag.y,w:40,h:56})){flag.taken=true;win();}
+if(player.y>LEVELS[levelId].height+40)hurt(true);
+const L=LEVELS[levelId];const targetX=player.x+player.w/2-VW*0.4;const targetY=player.y+player.h/2-VH*0.42;cam.x+=(targetX-cam.x)*Math.min(1,6*dt);cam.y+=(targetY-cam.y)*Math.min(1,5*dt);cam.x=Math.max(0,Math.min(L.width-VW,cam.x));cam.y=Math.max(0,Math.min(L.height-VH,cam.y));
+}
+function hurt(fall){if(invuln>0&&!fall)return;lives--;updateHud();if(lives<=0){phase='dead';hide('controls');show('dead');return;}player.x=player.spawn.x;player.y=player.spawn.y;player.vx=0;player.vy=0;invuln=1.4;toast('Увага: корпус пошкоджено');}
+function win(){phase='won';hide('controls');const L=LEVELS[levelId];const got=beans.filter(b=>b.got).length;$('wonTitle').textContent=L.name+' · зміну закрито';$('wonText').textContent=L.outro;$('wonBeans').textContent=`Зібрано: ${got}/${beans.length} зерен`;$('btnNext').style.display=levelId<LEVELS.length-1?'block':'none';show('won');}
+function draw(){
+ctx.clearRect(0,0,VW,VH);
+const g=ctx.createLinearGradient(0,0,0,VH);g.addColorStop(0,'#12182a');g.addColorStop(0.55,'#1a2438');g.addColorStop(1,'#0d1018');ctx.fillStyle=g;ctx.fillRect(0,0,VW,VH);
+if(phase==='menu'||phase==='brief'){ctx.fillStyle='rgba(62,200,180,0.15)';for(let i=0;i<24;i++){ctx.beginPath();ctx.arc((i*97)%VW,(i*53)%VH,2,0,7);ctx.fill();}return;}
+ctx.save();ctx.translate(-Math.floor(cam.x),-Math.floor(cam.y));
+ctx.fillStyle='rgba(40,60,90,0.25)';for(let i=0;i<8;i++){const x=((i*420-cam.x*0.3)%(LEVELS[levelId].width+400))-100;ctx.fillRect(x,500+i%3*40,180,220);}
+for(const p of plats){if(!p.alive)continue;let col='#3d4a5c';if(p.kind==='bounce')col='#3ec8b4';else if(p.kind==='crumble')col='#8b6914';else if(p.kind==='moving')col='#5b6cff';else if(p.kind==='oneway')col='#4a5a70';ctx.fillStyle=col;roundRect(ctx,p.x,p.y,p.w,p.h,6);ctx.fill();ctx.fillStyle='rgba(255,255,255,0.12)';ctx.fillRect(p.x+2,p.y+2,p.w-4,3);}
+for(const s of spikes){ctx.fillStyle='#c45c6a';const n=Math.max(1,Math.floor(s.w/14));for(let i=0;i<n;i++){const x=s.x+i*(s.w/n);ctx.beginPath();ctx.moveTo(x,s.y+24);ctx.lineTo(x+s.w/n/2,s.y);ctx.lineTo(x+s.w/n,s.y+24);ctx.fill();}}
+for(const b of beans){if(b.got)continue;const y=b.y+Math.sin(b.bob)*3;ctx.fillStyle='#c4a35a';ctx.beginPath();ctx.ellipse(b.x+11,y+11,9,11,0.3,0,7);ctx.fill();}
+for(const c of checks){ctx.fillStyle=c.on?'#3ec8b4':'#6a7a90';ctx.fillRect(c.x+12,c.y+8,8,36);ctx.beginPath();ctx.ellipse(c.x+16,c.y+10,16,10,0,0,7);ctx.fill();}
+ctx.fillStyle='#d4af37';ctx.fillRect(flag.x+8,flag.y,24,56);ctx.fillStyle='#3ec8b4';ctx.fillRect(flag.x,flag.y+8,40,12);
+const img=playerSprite();
+if(img){const iw=player.w*1.7,ih=player.h*1.65;ctx.save();if(invuln>0&&Math.floor(invuln*12)%2===0)ctx.globalAlpha=0.45;if(facing<0){ctx.translate(player.x+player.w/2,0);ctx.scale(-1,1);ctx.drawImage(img,-iw/2,player.y+player.h-ih,iw,ih);}else{ctx.drawImage(img,player.x+player.w/2-iw/2,player.y+player.h-ih,iw,ih);}ctx.restore();}else{ctx.fillStyle='#3ec8b4';ctx.fillRect(player.x,player.y,player.w,player.h);}
+ctx.restore();
+}
+function playerSprite(){if(!player.onGround&&player.vy!==0)return imgs['jump.png'];if(Math.abs(player.vx)>25&&player.onGround){const f=Math.floor(runTimer*14)%6;return imgs['run_'+f+'.png'];}return imgs['idle.png'];}
+function roundRect(ctx,x,y,w,h,r){const rr=Math.min(r,w/2,h/2);ctx.beginPath();ctx.moveTo(x+rr,y);ctx.arcTo(x+w,y,x+w,y+h,rr);ctx.arcTo(x+w,y+h,x,y+h,rr);ctx.arcTo(x,y+h,x,y,rr);ctx.arcTo(x,y,x+w,y,rr);ctx.closePath();}
+function bindBtn(el,on,off){const down=e=>{e.preventDefault();el.classList.add('held');on();};const up=e=>{e.preventDefault();el.classList.remove('held');off();};el.addEventListener('pointerdown',down);el.addEventListener('pointerup',up);el.addEventListener('pointercancel',up);el.addEventListener('pointerleave',up);}
+bindBtn($('btnL'),()=>keys.l=true,()=>keys.l=false);
+bindBtn($('btnR'),()=>keys.r=true,()=>keys.r=false);
+bindBtn($('btnJ'),()=>{if(!keys.j)keys.jPressed=true;keys.j=true;},()=>keys.j=false);
+window.addEventListener('keydown',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')keys.l=true;if(e.code==='ArrowRight'||e.code==='KeyD')keys.r=true;if(e.code==='ArrowUp'||e.code==='Space'||e.code==='KeyW'){if(!keys.j)keys.jPressed=true;keys.j=true;e.preventDefault();}});
+window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')keys.l=false;if(e.code==='ArrowRight'||e.code==='KeyD')keys.r=false;if(e.code==='ArrowUp'||e.code==='Space'||e.code==='KeyW')keys.j=false;});
+document.querySelectorAll('.lvl').forEach(b=>b.addEventListener('click',()=>openBrief(+b.dataset.lvl)));
+$('btnStart').onclick=begin;$('btnBack').onclick=goMenu;$('btnRetry').onclick=()=>{lives=3;begin();};$('btnDeadMenu').onclick=goMenu;$('btnWonMenu').onclick=goMenu;
+$('btnNext').onclick=()=>{if(levelId<LEVELS.length-1)openBrief(levelId+1);else goMenu();};
+let last=performance.now();
+function loop(now){const dt=Math.min(0.033,(now-last)/1000);last=now;update(dt);draw();requestAnimationFrame(loop);}
+loadImgs().then(()=>{if(imgs['logo.png']){$('menuLogo').src=imgs['logo.png'].src;$('briefLogo').src=imgs['logo.png'].src;$('hudLogo').src=imgs['logo.png'].src;}resize();requestAnimationFrame(loop);});
+})();
+</script>
+</body>
+</html>
