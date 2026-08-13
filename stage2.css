@@ -1,0 +1,21 @@
+/* Stage 2 landscape-first presentation */
+.stage2-landscape body{background:#02070a}
+.stage2-landscape #app{min-height:100dvh;background:radial-gradient(circle at 50% 0,#173e48 0,#061116 55%,#020609 100%)}
+.stage2-landscape .panel{width:min(100%,860px);padding:26px 28px 38px}
+.stage2-landscape .character-grid{grid-template-columns:minmax(150px,230px);justify-content:start}
+.stage2-landscape .character-card{min-height:185px}
+.stage2-landscape .character-card img{height:135px}
+.stage2-landscape .game-shell{width:min(100vw,calc(100dvh * 16 / 9),1200px);height:auto;aspect-ratio:16/9;border-radius:18px;box-shadow:0 24px 80px rgba(0,0,0,.45)}
+.stage2-landscape canvas{width:100%;height:100%;aspect-ratio:16/9;object-fit:contain}
+.stage2-landscape .hud{top:max(8px,env(safe-area-inset-top));left:max(10px,env(safe-area-inset-left));right:max(10px,env(safe-area-inset-right))}
+.stage2-landscape .chip,.stage2-landscape .hud-btn{padding:7px 11px;border-radius:999px;background:rgba(4,14,20,.72);box-shadow:0 4px 18px rgba(0,0,0,.18)}
+.stage2-landscape .touch-controls{bottom:max(12px,env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right))}
+.stage2-landscape .touch-controls button{width:58px;height:58px;border-radius:50%;background:rgba(3,14,20,.55)}
+.stage2-landscape .touch-controls .jump{width:68px;height:68px}
+#rotatePrompt{display:none;position:fixed;inset:0;z-index:9999;background:#040a0e;color:#fff;place-items:center;text-align:center;padding:32px}
+#rotatePrompt .rotate-card{max-width:340px;border:1px solid rgba(255,255,255,.14);border-radius:24px;padding:28px;background:#09151b}
+#rotatePrompt .phone{font-size:54px;display:block;margin-bottom:12px;transform:rotate(90deg)}
+#rotatePrompt b{display:block;font-size:20px;margin-bottom:8px}
+#rotatePrompt p{margin:0;color:#9caeb5;line-height:1.45}
+@media (orientation:portrait) and (max-width:900px){#rotatePrompt{display:grid}.stage2-landscape #app{visibility:hidden}}
+@media (max-height:520px){.stage2-landscape .touch-controls button{width:50px;height:50px}.stage2-landscape .touch-controls .jump{width:60px;height:60px}.stage2-landscape .chip,.stage2-landscape .hud-btn{font-size:11px;padding:6px 9px}}
