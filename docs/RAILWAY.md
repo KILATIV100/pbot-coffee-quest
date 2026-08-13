@@ -1,28 +1,26 @@
 # Railway deployment
 
-Use one GitHub repository and two Railway services.
+Production source of truth: [`RAILWAY_PRODUCTION.md`](./RAILWAY_PRODUCTION.md).
 
-## API service
+Topology:
+- `web` — public service, root `/apps/web`, config `/apps/web/railway.toml`
+- `api` — private service, root `/apps/api`, config `/apps/api/railway.toml`
+- `Postgres` — Railway PostgreSQL in the same project
 
-- Root directory: `apps/api`
-- Start command: `npm start`
-- Health: `/health`
-- Optional PostgreSQL: attach Railway Postgres; `DATABASE_URL` is detected automatically.
-- Optional `ALLOWED_ORIGIN`: set to the public web URL.
+Web variables:
+```text
+NODE_ENV=production
+API_INTERNAL_URL=http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3001
+```
 
-## Web service
+API variables:
+```text
+NODE_ENV=production
+PORT=3001
+DATABASE_URL=${{Postgres.DATABASE_URL}}
+REQUIRE_DATABASE=true
+AUTO_MIGRATE=false
+ALLOWED_ORIGIN=*
+```
 
-- Root directory: `apps/web`
-- Start command: `npm start`
-- Health: `/health`
-- Required production variable: `API_BASE_URL=https://<api-service-domain>`
-
-## Deploy flow
-
-1. Connect repository to Railway.
-2. Create API service from the repo with root `apps/api`.
-3. Add PostgreSQL if persistent leaderboard is required.
-4. Generate API public domain.
-5. Create Web service from the same repo with root `apps/web`.
-6. Set `API_BASE_URL` to API public domain.
-7. Set API `ALLOWED_ORIGIN` to Web public domain.
+Only `web` needs a public Railway domain. Browser `/api/*` requests are proxied by `web` to the private API service. The API uses the Railway Postgres reference variable. API migrations run in the pre-deploy step.
