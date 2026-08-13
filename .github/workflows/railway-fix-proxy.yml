@@ -1,0 +1,105 @@
+name: Railway Fix Private API Proxy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/fix-proxy-trigger'
+
+permissions:
+  contents: read
+
+env:
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+  PROJECT_ID: 3e6a50ca-f9c5-4901-83ae-741b3da95e71
+  PUBLIC_URL: https://web-production-f3e45.up.railway.app
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.40.1
+
+      - name: Link production project
+        run: railway link --project "$PROJECT_ID" --environment production --json
+
+      - name: Resolve API private domain safely
+        shell: bash
+        run: |
+          set -euo pipefail
+          VARS="$(railway variable list --service api --environment production --json)"
+          PRIVATE_DOMAIN="$(VARS="$VARS" python3 - <<'PY'
+          import json, os
+          data=json.loads(os.environ['VARS'])
+          def find(obj):
+              if isinstance(obj, dict):
+                  if 'RAILWAY_PRIVATE_DOMAIN' in obj and obj['RAILWAY_PRIVATE_DOMAIN']:
+                      return str(obj['RAILWAY_PRIVATE_DOMAIN'])
+                  for k,v in obj.items():
+                      if k == 'name' and v == 'RAILWAY_PRIVATE_DOMAIN':
+                          for value_key in ('value','resolvedValue','rawValue'):
+                              if obj.get(value_key):
+                                  return str(obj[value_key])
+                      r=find(v)
+                      if r: return r
+              elif isinstance(obj, list):
+                  for item in obj:
+                      r=find(item)
+                      if r: return r
+              return None
+          value=find(data)
+          if not value:
+              raise SystemExit('RAILWAY_PRIVATE_DOMAIN not found')
+          print(value)
+          PY
+          )"
+          test -n "$PRIVATE_DOMAIN"
+          case "$PRIVATE_DOMAIN" in
+            *.railway.internal) ;;
+            *) echo "Unexpected private domain format" >&2; exit 1 ;;
+          esac
+          echo "Resolved API private domain: ${PRIVATE_DOMAIN}"
+          echo "PRIVATE_DOMAIN=${PRIVATE_DOMAIN}" >> "$GITHUB_ENV"
+
+      - name: Configure web proxy upstream
+        run: |
+          set -euo pipefail
+          railway variable set --service web --environment production --skip-deploys \
+            NODE_ENV=production \
+            PORT=3000 \
+            "API_INTERNAL_URL=http://${PRIVATE_DOMAIN}:3001"
+
+      - name: Redeploy web only
+        run: railway up apps/web --path-as-root --service web --environment production --detach --json
+
+      - name: Wait for web and API proxy
+        shell: bash
+        run: |
+          set -euo pipefail
+          web_ok=0
+          api_ok=0
+          for i in $(seq 1 60); do
+            WEB_CODE="$(curl -L -sS -o /tmp/health.json -w '%{http_code}' "${PUBLIC_URL}/health" || true)"
+            API_CODE="$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta" || true)"
+            echo "attempt ${i}: web=${WEB_CODE} api=${API_CODE}"
+            [ "$WEB_CODE" = "200" ] && web_ok=1 || true
+            if [ "$API_CODE" = "200" ]; then api_ok=1; break; fi
+            sleep 5
+          done
+          test "$web_ok" = "1"
+          test "$api_ok" = "1"
+          echo 'WEB HEALTH:'; cat /tmp/health.json
+          echo; echo 'API META:'; cat /tmp/meta.json
+
+      - name: Verify game and leaderboard endpoints
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/")" = "200"
+          grep -qi 'P-BOT' /tmp/index.html
+          test "$(curl -L -sS -o /tmp/worlds.json -w '%{http_code}' "${PUBLIC_URL}/api/worlds")" = "200"
+          test "$(curl -L -sS -o /tmp/leader.json -w '%{http_code}' "${PUBLIC_URL}/api/leaderboard?worldId=1")" = "200"
+          echo "Railway web/API/Postgres smoke test passed: ${PUBLIC_URL}"
