@@ -19,6 +19,10 @@ const mime = {
   '.svg':'image/svg+xml',
   '.ico':'image/x-icon'
 };
+const stage2Aliases = new Map([
+  ['/assets/stage2/prod/bg-city.webp','assets/backgrounds/world01-level01.webp'],
+  ['/assets/stage2/prod/bg-park.webp','assets/backgrounds/world01-level01.webp']
+]);
 
 function commonHeaders(extra={}){
   return {
@@ -71,6 +75,14 @@ function proxyApi(req,res){
   req.pipe(upstreamReq);
 }
 
+async function sendStatic(res,filePath,{immutable=false}={}){
+  const data = await readFile(filePath);
+  const ext = extname(filePath).toLowerCase();
+  const cacheControl = immutable ? 'public,max-age=86400' : (ext === '.html' || ext === '.js' || ext === '.css' || ext === '.json' ? 'no-cache' : 'public,max-age=86400');
+  res.writeHead(200, commonHeaders({'content-type':mime[ext] || 'application/octet-stream','cache-control':cacheControl}));
+  res.end(data);
+}
+
 const server = http.createServer(async(req,res)=>{
   const requestUrl = new URL(req.url || '/', `http://${req.headers.host || 'localhost'}`);
   const pathname = decodeURIComponent(requestUrl.pathname);
@@ -80,16 +92,23 @@ const server = http.createServer(async(req,res)=>{
     return res.end(JSON.stringify({
       ok:true,
       service:'pbot-web',
+      stage2:true,
+      viewport:'960x540',
       deployment:process.env.RAILWAY_DEPLOYMENT_ID || null
     }));
   }
 
-  // Browser uses same-origin /api/*; the web service forwards it to Railway private networking.
   if(pathname === '/api' || pathname.startsWith('/api/')) return proxyApi(req,res);
 
   if(pathname === '/config.js'){
     res.writeHead(200, commonHeaders({'content-type':'text/javascript; charset=utf-8','cache-control':'no-store'}));
     return res.end(`window.__APP_CONFIG__={apiBase:window.location.origin,deployment:${JSON.stringify(process.env.RAILWAY_DEPLOYMENT_ID || 'local')}};`);
+  }
+
+  const alias = stage2Aliases.get(pathname);
+  if(alias){
+    try { return await sendStatic(res,resolve(root,alias),{immutable:true}); }
+    catch { res.writeHead(404,commonHeaders({'content-type':'text/plain; charset=utf-8'})); return res.end('Asset not found'); }
   }
 
   let rel = pathname === '/' ? 'index.html' : pathname.replace(/^\/+/, '');
@@ -100,18 +119,15 @@ const server = http.createServer(async(req,res)=>{
   }
 
   try{
-    const data = await readFile(file);
-    const ext = extname(file).toLowerCase();
-    const cacheControl = ext === '.html' || ext === '.js' || ext === '.css' || ext === '.json'
-      ? 'no-cache'
-      : 'public,max-age=86400';
-    res.writeHead(200, commonHeaders({'content-type':mime[ext] || 'application/octet-stream','cache-control':cacheControl}));
-    return res.end(data);
+    return await sendStatic(res,file);
   } catch {
+    const ext = extname(file).toLowerCase();
+    if(ext && ext !== '.html'){
+      res.writeHead(404, commonHeaders({'content-type':'text/plain; charset=utf-8','cache-control':'no-store'}));
+      return res.end('Not found');
+    }
     try{
-      const data = await readFile(resolve(root,'index.html'));
-      res.writeHead(200, commonHeaders({'content-type':'text/html; charset=utf-8','cache-control':'no-cache'}));
-      return res.end(data);
+      return await sendStatic(res,resolve(root,'index.html'));
     } catch {
       res.writeHead(404, commonHeaders({'content-type':'text/plain; charset=utf-8'}));
       return res.end('Not found');
@@ -130,4 +146,4 @@ function shutdown(signal){
 process.on('SIGTERM',()=>shutdown('SIGTERM'));
 process.on('SIGINT',()=>shutdown('SIGINT'));
 
-server.listen(PORT,'0.0.0.0',()=>console.log(`P-BOT web listening on ${PORT}; API upstream ${API_INTERNAL_URL}`));
+server.listen(PORT,'0.0.0.0',()=>console.log(`P-BOT web listening on ${PORT}; Stage 2 landscape; API upstream ${API_INTERNAL_URL}`));
