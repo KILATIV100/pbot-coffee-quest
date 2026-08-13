@@ -81,7 +81,29 @@ jobs:
           echo "$DOMAINS"
           echo "$DOMAINS" | grep -Eq 'railway\.app|up\.railway\.app' || railway domain --service web --environment production --port 3000 --json
 
+      - name: Wait for healthy web and API
+        run: |
+          set -euo pipefail
+          DOMAIN="$(railway domain list --service web --environment production --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["domains"][0]["domain"])')"
+          BASE="https://${DOMAIN}"
+          echo "Testing ${BASE}"
+          ok=0
+          for i in $(seq 1 60); do
+            code="$(curl -L -sS -o /tmp/health.json -w '%{http_code}' "${BASE}/health" || true)"
+            echo "health ${i}: ${code}"
+            if [ "$code" = "200" ]; then ok=1; break; fi
+            sleep 5
+          done
+          test "$ok" = "1"
+          cat /tmp/health.json
+          test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${BASE}/api/meta")" = "200"
+          cat /tmp/meta.json
+          test "$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${BASE}/")" = "200"
+          grep -qi 'P-BOT' /tmp/index.html
+          echo "PUBLIC_URL=${BASE}" >> "$GITHUB_ENV"
+
       - name: Final status
         run: |
           railway status --json
           railway domain list --service web --environment production --json
+          echo "Railway URL: ${PUBLIC_URL}"
