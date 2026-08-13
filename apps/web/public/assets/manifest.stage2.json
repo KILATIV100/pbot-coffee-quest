@@ -1,0 +1,37 @@
+{
+  "version": "2.0.0-prep",
+  "orientation": "landscape",
+  "logicalViewport": {"width": 960, "height": 540},
+  "characters": [
+    {"id":"pbot","group":"playable","status":"existing-needs-production-export"},
+    {"id":"perky","group":"companion","status":"approved-reference-needs-export"},
+    {"id":"kessi","group":"companion","status":"approved-reference-needs-export"},
+    {"id":"vitalii_npc","group":"npc","status":"approved-reference-needs-export"},
+    {"id":"marina","group":"npc","status":"approved-reference-needs-export"},
+    {"id":"dimon","group":"npc","status":"approved-reference-needs-export"},
+    {"id":"charme_master","group":"npc","status":"approved-reference-needs-export"},
+    {"id":"semkych","group":"mini-boss","status":"approved-reference-needs-export"}
+  ],
+  "enemies": [
+    {"id":"enemy_spam_bot","archetype":"ground","status":"approved-concept-needs-export"},
+    {"id":"enemy_scooter","archetype":"fast","status":"approved-concept-needs-export"},
+    {"id":"enemy_spy_drone","archetype":"air","status":"approved-concept-needs-export"},
+    {"id":"enemy_paper_shooter","archetype":"ranged","status":"approved-concept-needs-export"},
+    {"id":"enemy_municipal_bot","archetype":"heavy","status":"approved-concept-needs-export"}
+  ],
+  "bosses": [
+    {"id":"boss_the_official","status":"approved-concept-needs-export"},
+    {"id":"boss_bureaucracy_bulldozer","status":"approved-concept-needs-export"}
+  ],
+  "world01": {
+    "backgrounds": ["w01-bg-skyline-a","w01-bg-skyline-b","w01-mid-park-a","w01-mid-city-a","w01-mid-construction-a","w01-secret-underground-a"],
+    "terrain": ["sidewalk-long","sidewalk-medium","sidewalk-short","curb-edge","curb-corner","cracked-sidewalk","stairs","ramp","stone-bridge","retaining-wall","shop-roof","bus-stop-roof","scaffold-walkway","tunnel-entrance","underground-walkway"],
+    "props": ["bench","planter","streetlight","railing","bus-stop","city-bus","perkup-kiosk","charme-store","news-terminal","construction-barrier","scaffold","ladder","tree","bushes","drain-hatch"],
+    "hazards": ["ground-gap","water-edge","cracked-pavement","spike-hazard","roadworks-pit","temporary-barrier","maintenance-cart"],
+    "interactables": ["breakable-crate","smart-city-terminal","secret-hatch","secret-door","upper-route-ladder","underground-entrance"],
+    "collectibles": ["coffee-bean","brovary-token","intel-collectible"],
+    "boosts": ["perkup-nitro","charme-speed-shoes","kessi-paw-token"],
+    "progress": ["checkpoint-post","finish-gate","route-marker"]
+  },
+  "hostileSymbolPolicy": "fictional-marks-only"
+}
