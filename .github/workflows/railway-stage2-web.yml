@@ -29,18 +29,16 @@ jobs:
           railway whoami --json
           railway link --project "$PROJECT_NAME" --environment production --json
 
-      - name: Build Stage 2 runtime assets
+      - name: Verify Stage 2 frontend
         run: |
           set -euo pipefail
-          mkdir -p apps/web/public/assets/stage2/prod
-          base64 -d .stage2-assets/bg-city.b64 > apps/web/public/assets/stage2/prod/bg-city.webp
-          base64 -d .stage2-assets/bg-park.b64 > apps/web/public/assets/stage2/prod/bg-park.webp
-          test -s apps/web/public/assets/stage2/prod/bg-city.webp
-          test -s apps/web/public/assets/stage2/prod/bg-park.webp
-          file apps/web/public/assets/stage2/prod/*.webp
+          test -s apps/web/public/assets/backgrounds/world01-level01.webp
           node --check apps/web/public/game-stage2.js
+          node --check apps/web/server.js
           grep -q 'width="960" height="540"' apps/web/public/index.html
           grep -q 'game-stage2.js' apps/web/public/index.html
+          grep -q 'world01-level01.webp' apps/web/public/styles.css
+          grep -q 'stage2Aliases' apps/web/server.js
 
       - name: Configure web service
         run: |
@@ -62,18 +60,19 @@ jobs:
           echo "Testing ${BASE}"
           ok=0
           for i in $(seq 1 72); do
-            code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${BASE}/?stage2=$(date +%s)" || true)"
-            if [ "$code" = "200" ] && grep -q 'game-stage2.js' /tmp/index.html && grep -q 'width="960" height="540"' /tmp/index.html; then
+            stamp="$(date +%s)"
+            code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${BASE}/?stage2=${stamp}" || true)"
+            hcode="$(curl -L -sS -o /tmp/health.json -w '%{http_code}' "${BASE}/health?stage2=${stamp}" || true)"
+            if [ "$code" = "200" ] && [ "$hcode" = "200" ] && grep -q 'game-stage2.js' /tmp/index.html && grep -q 'width="960" height="540"' /tmp/index.html && grep -q '"stage2":true' /tmp/health.json && grep -q '"viewport":"960x540"' /tmp/health.json; then
               ok=1
               break
             fi
-            echo "stage2 ${i}: ${code}"
+            echo "stage2 ${i}: index=${code} health=${hcode}"
             sleep 5
           done
           test "$ok" = "1"
           test "$(curl -L -sS -o /tmp/city.webp -w '%{http_code}' "${BASE}/assets/stage2/prod/bg-city.webp?$(date +%s)")" = "200"
           test -s /tmp/city.webp
-          test "$(curl -L -sS -o /tmp/health.json -w '%{http_code}' "${BASE}/health")" = "200"
           test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${BASE}/api/meta")" = "200"
           cat /tmp/health.json
           cat /tmp/meta.json
