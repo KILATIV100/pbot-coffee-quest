@@ -1,0 +1,20 @@
+// Compact production sprite atlases used by the Brovary Universe build.
+Object.assign(characters[0],{
+  preview:'/assets/characters/pbot/idle.webp',
+  sheet:'/assets/characters/pbot/sheet.webp',
+  runFrames:6,
+  frames:{idle:[16,67,75,148],'run-1':[101,70,85,142],'run-2':[193,71,85,140],'run-3':[287,72,86,138],'run-4':[388,74,80,140],'run-5':[479,78,85,137],'run-6':[572,79,84,136],jump:[665,54,89,143]}
+});
+Object.assign(characters[1],{
+  preview:'/assets/characters/brovary-hero/idle.webp',
+  sheet:'/assets/characters/brovary-hero/sheet.webp',
+  runFrames:6,
+  frames:{idle:[52,50,86,184],'run-1':[170,60,126,174],'run-2':[317,57,131,177],'run-3':[466,60,122,175],'run-4':[608,62,132,174],'run-5':[26,270,130,176],'run-6':[177,270,123,173],crouch:[327,321,112,130],jump:[460,239,106,180],fall:[579,258,161,170]}
+});
+Object.assign(characters[2],{
+  preview:'/assets/characters/vitalii/idle.webp',
+  sheet:'/assets/characters/vitalii/sheet.webp',
+  runFrames:5,
+  frames:{idle:[38,52,80,195],'run-1':[136,65,126,177],'run-2':[264,68,113,176],'run-3':[368,65,126,178],'run-4':[500,66,114,176],'run-5':[608,67,124,176],crouch:[96,317,104,126],jump:[249,258,102,177],fall:[389,269,162,155]}
+});
+characters.forEach(c=>image(c.preview));
