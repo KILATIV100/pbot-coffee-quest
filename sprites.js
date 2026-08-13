@@ -1,0 +1,3 @@
+window.SPRITES={
+"idle.png":"data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACIAAABICAYAAACTKCf+AAAYHElEQVR42r16aZRc1Xnt/s65U93qGntQt9RqDUgCCcQgAULIWLJNIIwGhxZz7IBNmMdgY4MjZOfhR2IIGGMHBYIHsrClPDBmMpOxI
+}; // FULL CONTENT WOULD BE THE 78k FROM sprites_tiny.js - in real the full is passed
