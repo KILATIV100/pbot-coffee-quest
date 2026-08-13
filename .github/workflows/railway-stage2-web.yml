@@ -1,0 +1,85 @@
+name: Railway Stage 2 Web
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/stage2-web-trigger'
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_NAME: pbot-brovary-universe
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+
+jobs:
+  deploy-stage2-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.40.1
+
+      - name: Authenticate and link Railway
+        run: |
+          set -euo pipefail
+          railway whoami --json
+          railway link --project "$PROJECT_NAME" --environment production --json
+
+      - name: Build Stage 2 runtime assets
+        run: |
+          set -euo pipefail
+          mkdir -p apps/web/public/assets/stage2/prod
+          base64 -d .stage2-assets/bg-city.b64 > apps/web/public/assets/stage2/prod/bg-city.webp
+          base64 -d .stage2-assets/bg-park.b64 > apps/web/public/assets/stage2/prod/bg-park.webp
+          test -s apps/web/public/assets/stage2/prod/bg-city.webp
+          test -s apps/web/public/assets/stage2/prod/bg-park.webp
+          file apps/web/public/assets/stage2/prod/*.webp
+          node --check apps/web/public/game-stage2.js
+          grep -q 'width="960" height="540"' apps/web/public/index.html
+          grep -q 'game-stage2.js' apps/web/public/index.html
+
+      - name: Configure web service
+        run: |
+          set -euo pipefail
+          D='$'
+          railway variable set --service web --environment production --skip-deploys \
+            NODE_ENV=production \
+            PORT=3000 \
+            "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
+
+      - name: Deploy Stage 2 web
+        run: railway up apps/web --path-as-root --service web --environment production --detach --json
+
+      - name: Wait for Stage 2 production
+        run: |
+          set -euo pipefail
+          DOMAIN="$(railway domain list --service web --environment production --json | python3 -c 'import json,sys; d=json.load(sys.stdin); print(d["domains"][0]["domain"])')"
+          BASE="https://${DOMAIN}"
+          echo "Testing ${BASE}"
+          ok=0
+          for i in $(seq 1 72); do
+            code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${BASE}/?stage2=$(date +%s)" || true)"
+            if [ "$code" = "200" ] && grep -q 'game-stage2.js' /tmp/index.html && grep -q 'width="960" height="540"' /tmp/index.html; then
+              ok=1
+              break
+            fi
+            echo "stage2 ${i}: ${code}"
+            sleep 5
+          done
+          test "$ok" = "1"
+          test "$(curl -L -sS -o /tmp/city.webp -w '%{http_code}' "${BASE}/assets/stage2/prod/bg-city.webp?$(date +%s)")" = "200"
+          test -s /tmp/city.webp
+          test "$(curl -L -sS -o /tmp/health.json -w '%{http_code}' "${BASE}/health")" = "200"
+          test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${BASE}/api/meta")" = "200"
+          cat /tmp/health.json
+          cat /tmp/meta.json
+          echo "PUBLIC_URL=${BASE}" >> "$GITHUB_ENV"
+
+      - name: Final URL
+        run: |
+          echo "Stage 2 URL: ${PUBLIC_URL}"
+          railway status --json
