@@ -8,41 +8,42 @@
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
+  <div id="rotatePrompt" aria-hidden="true">
+    <div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT грається горизонтально · 16:9</span></div>
+  </div>
   <main id="app">
-    <section id="menu" class="panel">
-      <div class="brand">P-BOT <span>BROVARY UNIVERSE</span></div>
-      <h1>Обери героя</h1>
-      <div id="characters" class="character-grid"></div>
-      <h2>Світ</h2>
-      <div id="worlds" class="world-strip"></div>
-      <button id="play" class="primary">Почати</button>
-      <p class="hint">◀ ▶ / A D — рух · ▼ / S — присід · ▲ / Space / W — стрибок · подвійний стрибок</p>
+    <section id="intro" class="intro">
+      <div class="intro-copy">
+        <div class="eyebrow">P-BOT · BROVARY UNIVERSE</div>
+        <h1>Місто прокидається</h1>
+        <p>WORLD 01 · Розвилка · Stage 2</p>
+        <button id="startBtn">ЗАВАНТАЖЕННЯ…</button>
+      </div>
     </section>
 
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="540" height="960"></canvas>
+      <canvas id="game" width="960" height="540"></canvas>
       <div class="hud">
-        <button id="back" class="hud-btn">☰</button>
-        <div id="worldLabel" class="chip"></div>
-        <div class="chip">☕ <span id="beans">0/0</span></div>
-        <div class="chip">❤ <span id="lives">3</span></div>
-      </div>
-      <div class="touch-controls">
-        <div class="touch-left">
-          <button data-key="left">◀</button>
-          <button data-key="right">▶</button>
-        </div>
-        <div class="touch-right">
-          <button data-key="down">▼</button>
-          <button data-key="jump" class="jump">▲</button>
+        <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
+        <div class="world-chip"><b>01-01</b><span>Місто прокидається</span></div>
+        <div class="hud-right">
+          <div class="chip">☕ <b id="beans">0</b></div>
+          <div class="chip">★ <b id="tokens">0</b></div>
+          <div class="chip">♥ <b id="lives">3</b></div>
         </div>
       </div>
-      <div id="result" class="result hidden"></div>
+      <div id="toast" class="toast"></div>
+      <div class="controls" aria-hidden="true">
+        <div class="move-controls">
+          <button data-key="left">◀</button><button data-key="right">▶</button>
+        </div>
+        <div class="action-controls">
+          <button data-key="down" class="small">▼</button><button data-key="jump" class="jump">▲</button>
+        </div>
+      </div>
     </section>
   </main>
   <script src="/config.js"></script>
-  <script src="/app.js"></script>
-  <script src="/character-assets-patch.js"></script>
-  <script src="/world01-patch.js"></script>
+  <script src="/game-stage2.js"></script>
 </body>
 </html>
