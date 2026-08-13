@@ -1,0 +1,87 @@
+name: Railway Provision V2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/deploy-trigger-v2'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_NAME: pbot-brovary-universe
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+
+jobs:
+  provision:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.40.1
+
+      - name: Verify Railway auth
+        run: |
+          set -euo pipefail
+          test -n "${RAILWAY_API_TOKEN:-}"
+          railway whoami --json
+
+      - name: Link or create project
+        run: |
+          set -euo pipefail
+          if railway link --project "$PROJECT_NAME" --environment production --json >/tmp/link.json 2>/tmp/link.err; then
+            cat /tmp/link.json
+          else
+            cat /tmp/link.err || true
+            railway init --name "$PROJECT_NAME" --json | tee /tmp/init.json
+          fi
+          railway status --json
+
+      - name: Ensure Postgres and services
+        run: |
+          set -euo pipefail
+          SERVICES="$(railway service list --json || true)"
+          echo "$SERVICES"
+          echo "$SERVICES" | grep -Eq '"name"[[:space:]]*:[[:space:]]*"Postgres"' || railway add --database postgres --json
+          SERVICES="$(railway service list --json || true)"
+          echo "$SERVICES" | grep -Eq '"name"[[:space:]]*:[[:space:]]*"api"' || railway add --service api --json
+          SERVICES="$(railway service list --json || true)"
+          echo "$SERVICES" | grep -Eq '"name"[[:space:]]*:[[:space:]]*"web"' || railway add --service web --json
+          railway service list --json
+
+      - name: Configure variables
+        run: |
+          set -euo pipefail
+          D='$'
+          railway variable set --service api --environment production --skip-deploys \
+            NODE_ENV=production \
+            PORT=3001 \
+            REQUIRE_DATABASE=true \
+            AUTO_MIGRATE=false \
+            ALLOWED_ORIGIN='*' \
+            "DATABASE_URL=${D}{{Postgres.DATABASE_URL}}"
+          railway variable set --service web --environment production --skip-deploys \
+            NODE_ENV=production \
+            PORT=3000 \
+            "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
+
+      - name: Deploy API
+        run: railway up apps/api --path-as-root --service api --environment production --detach --json
+
+      - name: Deploy Web
+        run: railway up apps/web --path-as-root --service web --environment production --detach --json
+
+      - name: Ensure web domain
+        run: |
+          set -euo pipefail
+          DOMAINS="$(railway domain list --service web --environment production --json || true)"
+          echo "$DOMAINS"
+          echo "$DOMAINS" | grep -Eq 'railway\.app|up\.railway\.app' || railway domain --service web --environment production --port 3000 --json
+
+      - name: Final status
+        run: |
+          railway status --json
+          railway domain list --service web --environment production --json
