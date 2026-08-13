@@ -1,0 +1,31 @@
+name: Railway Diagnose
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/diagnose-trigger'
+
+permissions:
+  contents: read
+
+env:
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+  PROJECT_ID: 3e6a50ca-f9c5-4901-83ae-741b3da95e71
+
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.40.1
+      - name: Status
+        run: railway status --project "$PROJECT_ID" --environment production --json
+      - name: API build logs
+        run: railway logs --project "$PROJECT_ID" --environment production --service api --build --lines 200 || true
+      - name: API deploy logs
+        run: railway logs --project "$PROJECT_ID" --environment production --service api --deployment --lines 200 || true
+      - name: Web build logs
+        run: railway logs --project "$PROJECT_ID" --environment production --service web --build --lines 120 || true
+      - name: Web deploy logs
+        run: railway logs --project "$PROJECT_ID" --environment production --service web --deployment --lines 120 || true
