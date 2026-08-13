@@ -1,33 +1,50 @@
-# P-BOT: Coffee Quest
+# P-BOT: Brovary Universe
 
-Офіційна мобільна платформерка **Perk UP** (Бровари).
+Full-stack expansion of **P-BOT: Coffee Quest** into a mobile platformer inspired by Brovary, Ukraine.
 
-## Маскот
-3D P-BOT: чорне худі, золоті навушники, cyan-ірокез, неон-усмішка.
+## Current branch
 
-## Грати
-**GitHub Pages (постійне посилання):**  
-https://kilativ100.github.io/pbot-coffee-quest/
+Development branch: `brovary-universe`.
 
-Або відкрий `index.html` локально.
+## Core gameplay
 
-## Керування
-- ◀ ▶ / A D — рух
-- ▼ / S — присід
-- ▲ / Space / W — стрибок (утримання = вище; подвійний стрибок у повітрі)
-- Jump buffer + coyote time + squash/stretch
+- left/right movement
+- crouch
+- variable-height jump
+- double jump
+- coyote time
+- jump buffer
+- squash/stretch
+- collectibles
+- hazards
+- checkpoints
+- level finish
 
-## Рівні
-1. **Еспресо-Експрес** — станція, реле, перша зміна  
-2. **Капучинові Хмари** — піна, вітер, висота
+## Playable characters
 
-## Структура репо
-```
-index.html   — повна самодостатня гра (спрайти в base64)
-README.md
-```
+1. P-BOT
+2. Brovary Hero
+3. Vitalii
 
-Спрайти (axiom 3D) вбудовані. Для подальшої розробки можна витягнути в `sprites/` папку.
+The two human heroes use newly prepared transparent production sprite sheets.
 
-## Розробка
-Коміт у `main` → GitHub Pages оновлюється автоматично.
+## Brovary worlds
+
+The project contains a 15-world catalog ranging from Розвилка, Парк Перемоги and Приозерний through Трамвай 23, Аеродром, Торгмаш and Радіодистрикт to Future Brovary Core.
+
+## Full-stack structure
+
+- `apps/web` — mobile-first Canvas frontend/game client
+- `apps/api` — Node API for world/character metadata, run results and leaderboard
+- `docs/WORLDS.md` — 15-world plan
+- `docs/RAILWAY.md` — Railway deployment layout
+- `docs/SPRITES.md` — sprite pipeline
+
+## Railway
+
+Deploy two services from this repository:
+
+- Web service root: `apps/web`
+- API service root: `apps/api`
+
+Set `API_BASE_URL` on the web service to the public API URL. Attach Railway PostgreSQL to the API to enable persistent leaderboard storage through `DATABASE_URL`.
