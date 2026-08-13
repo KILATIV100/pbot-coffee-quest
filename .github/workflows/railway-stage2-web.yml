@@ -33,10 +33,10 @@ jobs:
         run: |
           set -euo pipefail
           test -s apps/web/public/assets/backgrounds/world01-level01.webp
-          node --check apps/web/public/game-stage2.js
+          node --check apps/web/public/game-stage2-v2.js
           node --check apps/web/server.js
           grep -q 'width="960" height="540"' apps/web/public/index.html
-          grep -q 'game-stage2.js' apps/web/public/index.html
+          grep -q 'game-stage2-v2.js' apps/web/public/index.html
           grep -q 'world01-level01.webp' apps/web/public/styles.css
           grep -q 'stage2Aliases' apps/web/server.js
 
@@ -63,7 +63,7 @@ jobs:
             stamp="$(date +%s)"
             code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${BASE}/?stage2=${stamp}" || true)"
             hcode="$(curl -L -sS -o /tmp/health.json -w '%{http_code}' "${BASE}/health?stage2=${stamp}" || true)"
-            if [ "$code" = "200" ] && [ "$hcode" = "200" ] && grep -q 'game-stage2.js' /tmp/index.html && grep -q 'width="960" height="540"' /tmp/index.html && grep -q '"stage2":true' /tmp/health.json && grep -q '"viewport":"960x540"' /tmp/health.json; then
+            if [ "$code" = "200" ] && [ "$hcode" = "200" ] && grep -q 'game-stage2-v2.js' /tmp/index.html && grep -q 'width="960" height="540"' /tmp/index.html && grep -q '"stage2":true' /tmp/health.json && grep -q '"viewport":"960x540"' /tmp/health.json; then
               ok=1
               break
             fi
