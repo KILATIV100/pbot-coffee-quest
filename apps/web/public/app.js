@@ -10,17 +10,17 @@ const localWorlds = [
 const characters = [
   {
     id:'pbot', name:'P-BOT', runFrames:6,
-    preview:'/assets/characters/pbot/idle.png', sheet:'/assets/characters/pbot/sheet.png',
+    preview:'/assets/characters/pbot/idle.webp', sheet:'/assets/characters/pbot/sheet.webp',
     frames:{idle:[45,191,213,424],'run-1':[288,200,244,405],'run-2':[552,202,244,402],'run-3':[819,206,246,396],'run-4':[1109,212,230,402],'run-5':[1369,222,244,392],'run-6':[1636,227,239,388],jump:[1900,154,254,408]}
   },
   {
     id:'brovary-hero', name:'Brovary Hero', runFrames:6,
-    preview:'/assets/characters/brovary-hero/idle.png', sheet:'/assets/characters/brovary-hero/sheet.png',
+    preview:'/assets/characters/brovary-hero/idle.webp', sheet:'/assets/characters/brovary-hero/sheet.webp',
     frames:{idle:[103,100,171,369],'run-1':[339,120,252,348],'run-2':[634,114,262,354],'run-3':[932,121,245,350],'run-4':[1215,125,263,347],'run-5':[52,541,261,353],'run-6':[354,541,246,346],crouch:[654,642,223,261],jump:[921,478,211,361],fall:[1158,517,322,340]}
   },
   {
     id:'vitalii', name:'Vitalii', runFrames:5,
-    preview:'/assets/characters/vitalii/idle.png', sheet:'/assets/characters/vitalii/sheet.png',
+    preview:'/assets/characters/vitalii/idle.webp', sheet:'/assets/characters/vitalii/sheet.webp',
     frames:{idle:[76,103,161,390],'run-1':[271,130,252,354],'run-2':[527,136,226,352],'run-3':[735,130,252,356],'run-4':[1000,132,227,353],'run-5':[1217,134,249,351],crouch:[191,634,207,253],jump:[498,517,205,354],fall:[778,538,323,310]}
   }
 ];
@@ -72,7 +72,7 @@ async function loadRemoteData(){
   renderMenu();
 }
 
-const backgrounds={1:'/assets/backgrounds/brovary-city.png'};
+const backgrounds={1:'/assets/backgrounds/brovary-city.webp'};
 
 function makeLevel(worldId){
   const width=3600;
