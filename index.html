@@ -1,1 +1,49 @@
-PLACEHOLDER - the full 74943 char content of pbot-permanent.html should be here. In practice the system will use the file if possible.
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
+  <meta name="theme-color" content="#071015" />
+  <title>P-BOT · Brovary Universe</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main id="app">
+    <section id="menu" class="panel">
+      <div class="brand">P-BOT <span>BROVARY UNIVERSE</span></div>
+      <h1>Обери героя</h1>
+      <div id="characters" class="character-grid"></div>
+      <h2>Світ</h2>
+      <div id="worlds" class="world-strip"></div>
+      <button id="play" class="primary">Почати</button>
+      <p class="hint">◀ ▶ / A D — рух · ▼ / S — присід · ▲ / Space / W — стрибок · подвійний стрибок</p>
+    </section>
+
+    <section id="gameShell" class="game-shell hidden">
+      <canvas id="game" width="540" height="960"></canvas>
+      <div class="hud">
+        <button id="back" class="hud-btn">☰</button>
+        <div id="worldLabel" class="chip"></div>
+        <div class="chip">☕ <span id="beans">0/0</span></div>
+        <div class="chip">❤ <span id="lives">3</span></div>
+      </div>
+      <div class="touch-controls">
+        <div class="touch-left">
+          <button data-key="left">◀</button>
+          <button data-key="right">▶</button>
+        </div>
+        <div class="touch-right">
+          <button data-key="down">▼</button>
+          <button data-key="jump" class="jump">▲</button>
+        </div>
+      </div>
+      <div id="result" class="result hidden"></div>
+    </section>
+  </main>
+  <script src="./config.js"></script>
+  <script src="./app.js"></script>
+  <script src="./character-assets-patch.js"></script>
+  <script src="./world01-patch.js"></script>
+  <script src="./pages-paths.js"></script>
+</body>
+</html>
