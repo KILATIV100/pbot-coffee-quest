@@ -1,0 +1,72 @@
+name: Stage 2 v3 Public Probe
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/stage2-v3-probe-trigger'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+env:
+  PUBLIC_URL: https://web-production-f3e45.up.railway.app
+
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install image decoder
+        run: python3 -m pip install --quiet pillow
+
+      - name: Probe Stage 2 v3 public build
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?probe=$(date +%s)")" = "200"
+          grep -q 'game-stage2-v3.js' /tmp/index.html
+          ! grep -q 'game-stage2-v2.js' /tmp/index.html
+          test "$(curl -L -sS -o /tmp/bg.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/v3/level-bg.webp?probe=$(date +%s)")" = "200"
+          test "$(curl -L -sS -o /tmp/atlas.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/v3/dynamic-atlas.webp?probe=$(date +%s)")" = "200"
+          python3 - <<'PY'
+          from PIL import Image
+          expected=[('/tmp/bg.webp',(1600,332)),('/tmp/atlas.webp',(500,351))]
+          for path,dims in expected:
+              with Image.open(path) as im:
+                  im.load()
+                  print(path, im.format, im.size)
+                  assert im.format == 'WEBP'
+                  assert im.size == dims, (im.size,dims)
+          PY
+          test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta?probe=$(date +%s)")" = "200"
+          grep -q '"db":true' /tmp/meta.json
+          grep -q '"environment":"production"' /tmp/meta.json
+
+      - name: Record public success
+        if: success()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .railway/stage2-v3-public-fail
+          printf 'status=success\nrun_id=%s\npublic_url=%s\n' "$GITHUB_RUN_ID" "$PUBLIC_URL" > .railway/stage2-v3-public-ok
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A .railway/stage2-v3-public-ok .railway/stage2-v3-public-fail || true
+          git commit -m 'Record Stage 2 v3 public probe success [skip ci]' || exit 0
+          git push
+
+      - name: Record public failure
+        if: failure()
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -f .railway/stage2-v3-public-ok
+          printf 'status=failure\nrun_id=%s\npublic_url=%s\n' "$GITHUB_RUN_ID" "$PUBLIC_URL" > .railway/stage2-v3-public-fail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -A .railway/stage2-v3-public-ok .railway/stage2-v3-public-fail || true
+          git commit -m 'Record Stage 2 v3 public probe failure [skip ci]' || exit 0
+          git push
