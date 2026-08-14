@@ -1,0 +1,4 @@
+1) push level-bg.webp as binary blob
+2) push dynamic-atlas.webp as binary blob
+3) attach blobs to main tree
+4) simplify Railway deploy
