@@ -1,0 +1,1 @@
+Need create_blob tool for binary data.
