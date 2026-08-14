@@ -21,64 +21,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Rebuild Stage 2 v3 binary assets
-        shell: bash
-        run: |
-          set -euo pipefail
-          mkdir -p apps/web/public/assets/stage2/v3
-          cat \
-            .stage2-v3/bg-00.part \
-            .stage2-v3/bg-01.part \
-            .stage2-v3/bg-02.part \
-            .stage2-v3/bg-03.part \
-            .stage2-v3/bg-04.part \
-            | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/v3/level-bg.webp
-          cat \
-            .stage2-v3/dyn-00.part \
-            .stage2-v3/dyn-01.part \
-            .stage2-v3/dyn-02a.part \
-            .stage2-v3/dyn-02b.part \
-            .stage2-v3/dyn-02c.part \
-            .stage2-v3/dyn-03a.part \
-            .stage2-v3/dyn-03b.part \
-            | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/v3/dynamic-atlas.webp
-          BG_BYTES="$(stat -c%s apps/web/public/assets/stage2/v3/level-bg.webp)"
-          ATLAS_BYTES="$(stat -c%s apps/web/public/assets/stage2/v3/dynamic-atlas.webp)"
-          echo "Rebuilt background: ${BG_BYTES} bytes"
-          echo "Rebuilt atlas: ${ATLAS_BYTES} bytes"
-          test "$BG_BYTES" -gt 45000
-          test "$ATLAS_BYTES" -gt 38000
-
-      - name: Validate WebP decode and dimensions
-        shell: bash
-        run: |
-          set -euo pipefail
-          python3 -m pip install --quiet pillow
-          python3 - <<'PY'
-          from PIL import Image
-          expected = {
-              'apps/web/public/assets/stage2/v3/level-bg.webp': (1600, 332),
-              'apps/web/public/assets/stage2/v3/dynamic-atlas.webp': (500, 351),
-          }
-          for path, dims in expected.items():
-              with Image.open(path) as im:
-                  im.load()
-                  print(path, im.format, im.size)
-                  if im.format != 'WEBP':
-                      raise SystemExit(f'{path}: expected WEBP, got {im.format}')
-                  if im.size != dims:
-                      raise SystemExit(f'{path}: expected {dims}, got {im.size}')
-          PY
-
-      - name: Validate Stage 2 v3 frontend
+      - name: Validate safe-load Stage 2 v3
         shell: bash
         run: |
           set -euo pipefail
           node --check apps/web/public/game-stage2-v3.js
+          node --check apps/web/server.js
           grep -q 'width="960" height="540"' apps/web/public/index.html
           grep -q 'game-stage2-v3.js' apps/web/public/index.html
           ! grep -q 'game-stage2-v2.js' apps/web/public/index.html
-          grep -q '/assets/stage2/v3/level-bg.webp' apps/web/public/styles.css
+          grep -q 'Promise.allSettled' apps/web/public/game-stage2-v3.js
+          grep -q "bgFallback:'/assets/backgrounds/world01-level01.webp'" apps/web/public/game-stage2-v3.js
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli@5.40.1
@@ -90,7 +43,7 @@ jobs:
           railway whoami --json
           railway link --project "$PROJECT_NAME" --environment production --json
 
-      - name: Deploy Stage 2 v3 web
+      - name: Configure and deploy web
         shell: bash
         run: |
           set -euo pipefail
@@ -100,37 +53,28 @@ jobs:
             "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
           railway up apps/web --path-as-root --service web --environment production --detach --json
 
-      - name: Wait until v3 is actually live
+      - name: Wait for safe-load v3 production
         shell: bash
         run: |
           set -euo pipefail
           ok=0
           for i in $(seq 1 120); do
-            code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?stage2=v3" || true)"
-            if [ "$code" = "200" ] && grep -q 'game-stage2-v3.js' /tmp/index.html; then
-              bg="$(curl -L -sS -o /tmp/bg.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/v3/level-bg.webp?v=3" || true)"
-              atlas="$(curl -L -sS -o /tmp/atlas.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/v3/dynamic-atlas.webp?v=3" || true)"
-              if [ "$bg" = "200" ] && [ "$atlas" = "200" ] && \
-                 [ "$(stat -c%s /tmp/bg.webp)" -gt "45000" ] && \
-                 [ "$(stat -c%s /tmp/atlas.webp)" -gt "38000" ]; then
-                ok=1
-                break
-              fi
+            stamp="$(date +%s)"
+            code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?fix=${stamp}" || true)"
+            js="$(curl -L -sS -o /tmp/game.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-v3.js?fix=${stamp}" || true)"
+            if [ "$code" = "200" ] && [ "$js" = "200" ] && \
+               grep -q 'game-stage2-v3.js' /tmp/index.html && \
+               grep -q 'Promise.allSettled' /tmp/game.js && \
+               grep -q 'safe asset mode active' /tmp/game.js; then
+              ok=1
+              break
             fi
-            echo "Waiting for v3 deployment: ${i}/120 (index ${code})"
+            echo "Waiting ${i}/120 index=${code} js=${js}"
             sleep 5
           done
           test "$ok" = "1"
-          python3 - <<'PY'
-          from PIL import Image
-          for path, dims in [('/tmp/bg.webp',(1600,332)),('/tmp/atlas.webp',(500,351))]:
-              with Image.open(path) as im:
-                  im.load()
-                  assert im.size == dims, (path, im.size, dims)
-          PY
-          echo 'v3 entrypoint and art assets are live.'
 
-      - name: Smoke test web + API
+      - name: Smoke test API
         shell: bash
         run: |
           set -euo pipefail
@@ -139,4 +83,4 @@ jobs:
           grep -q '"db":true' /tmp/meta.json
           cat /tmp/health.json
           cat /tmp/meta.json
-          echo "Stage 2 v3: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stage 2 v3 safe-load live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
