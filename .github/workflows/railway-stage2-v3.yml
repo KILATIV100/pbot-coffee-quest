@@ -28,7 +28,8 @@ jobs:
           mkdir -p apps/web/public/assets/stage2/v3
           cat \
             .stage2-v3/bg-00.part \
-            .stage2-v3/bg-01a.fix .stage2-v3/bg-01b.fix .stage2-v3/bg-01c.fix .stage2-v3/bg-01d.fix \
+            .stage2-v3/bg-01a1.exact .stage2-v3/bg-01a2.exact .stage2-v3/bg-01a3.exact .stage2-v3/bg-01a4.exact \
+            .stage2-v3/bg-01b.fix .stage2-v3/bg-01c.fix .stage2-v3/bg-01d.fix \
             .stage2-v3/bg-02.part .stage2-v3/bg-03.part .stage2-v3/bg-04.part \
             | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/v3/level-bg.webp
           cat \
