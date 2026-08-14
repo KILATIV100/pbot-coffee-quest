@@ -3,32 +3,37 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <meta name="theme-color" content="#071015" />
-  <title>P-BOT · Brovary Universe</title>
+  <meta name="theme-color" content="#061015" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <title>P-BOT · Brovary Universe · Stage 2 v3</title>
   <link rel="stylesheet" href="/styles.css" />
 </head>
 <body>
   <div id="rotatePrompt" aria-hidden="true">
-    <div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT грається горизонтально · 16:9</span></div>
+    <div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT працює горизонтально · 16:9</span></div>
   </div>
+
   <main id="app">
     <section id="intro" class="intro">
       <div class="intro-copy">
         <div class="eyebrow">P-BOT · BROVARY UNIVERSE</div>
         <h1>Місто прокидається</h1>
-        <p>WORLD 01 · Розвилка · Stage 2</p>
+        <p>WORLD 01 · Розвилка · Z0–Z3</p>
+        <div class="stage-badges"><span>PERKUP NITRO</span><span>CHARME MOBILITY</span><span>ХБ INTEL</span></div>
         <button id="startBtn">ЗАВАНТАЖЕННЯ…</button>
+        <small>Місто — це рівень. Без видимих платформ.</small>
       </div>
     </section>
 
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="960" height="540"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="P-BOT Stage 2 v3"></canvas>
       <div class="hud">
         <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
         <div class="world-chip"><b>01-01</b><span>Місто прокидається</span></div>
         <div class="hud-right">
           <div class="chip">☕ <b id="beans">0</b></div>
-          <div class="chip">★ <b id="tokens">0</b></div>
+          <div class="chip">✦ <b id="tokens">0</b></div>
           <div class="chip">♥ <b id="lives">3</b></div>
         </div>
       </div>
@@ -44,6 +49,6 @@
     </section>
   </main>
   <script src="/config.js"></script>
-  <script src="/game-stage2-v2.js"></script>
+  <script src="/game-stage2-v3.js"></script>
 </body>
 </html>
