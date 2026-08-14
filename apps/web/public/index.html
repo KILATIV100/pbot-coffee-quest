@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#061015" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>P-BOT · Brovary Universe · Stage 2 P0</title>
-  <link rel="stylesheet" href="/styles.css?v=p0-1" />
+  <title>P-BOT · Brovary Universe · 01-01 Working Build</title>
+  <link rel="stylesheet" href="/styles.css?v=working-r1" />
 </head>
 <body>
   <div id="rotatePrompt" aria-hidden="true">
@@ -18,27 +18,40 @@
       <div class="intro-copy">
         <div class="eyebrow">P-BOT · BROVARY UNIVERSE</div>
         <h1>Місто прокидається</h1>
-        <p>WORLD 01 · Розвилка · P0 CLEANUP</p>
-        <div class="stage-badges"><span>CLEAN SPRITES</span><span>REAL CROUCH</span><span>VISIBLE TRIGGERS</span></div>
-        <button id="startBtn" disabled>ЗАВАНТАЖЕННЯ АСЕТІВ…</button>
-        <small>Development review · 16:9 · collision cleanup</small>
+        <p>WORLD 01 · LEVEL 01 · WORKING BUILD</p>
+        <div class="stage-badges"><span>NITRO</span><span>DOUBLE JUMP</span><span>CHARME BOOST</span><span>PERKY PULSE</span></div>
+        <button id="startBtn" disabled>ЗАВАНТАЖЕННЯ…</button>
+        <small>Окремі об’єкти · видимі небезпеки · checkpoint · фініш</small>
       </div>
     </section>
+
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="960" height="540" aria-label="P-BOT Stage 2 P0 cleanup"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="P-BOT World 01 Level 01"></canvas>
       <div class="hud">
         <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
         <div class="world-chip"><b>01-01</b><span>Місто прокидається</span></div>
-        <div class="hud-right"><div class="chip">☕ <b id="beans">0</b></div><div class="chip">✦ <b id="tokens">0</b></div><div class="chip">♥ <b id="lives">3</b></div></div>
+        <div id="abilityState" class="ability-chip">PERKY PULSE</div>
+        <div class="hud-right">
+          <div class="chip">☕ <b id="beans">0</b></div>
+          <div class="chip">✦ <b id="tokens">0</b></div>
+          <div class="chip">♥ <b id="lives">3</b></div>
+        </div>
       </div>
       <div id="toast" class="toast"></div>
       <div class="controls" aria-hidden="true">
-        <div class="move-controls"><button data-key="left">◀</button><button data-key="right">▶</button></div>
-        <div class="action-controls"><button data-key="down" class="small">▼</button><button data-key="jump" class="jump">▲</button></div>
+        <div class="move-controls">
+          <button data-key="left" aria-label="Ліворуч">◀</button>
+          <button data-key="right" aria-label="Праворуч">▶</button>
+        </div>
+        <div class="action-controls">
+          <button data-key="pulse" class="ability" aria-label="Perky Pulse">◎</button>
+          <button data-key="down" class="small" aria-label="Присісти">▼</button>
+          <button data-key="jump" class="jump" aria-label="Стрибок">▲</button>
+        </div>
       </div>
     </section>
   </main>
   <script src="/config.js"></script>
-  <script src="/game-stage2-p0.js?v=p0-1"></script>
+  <script src="/game-stage2-working.js?v=working-r1"></script>
 </body>
 </html>
