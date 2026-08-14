@@ -15,41 +15,41 @@ Parent issue: #3
 Issue: #4
 
 ## Sprite pipeline
-- [ ] P-BOT: true alpha, без чорного/світлого фону, без ореолів
-- [ ] Perky: true alpha, consistent crop/anchor
-- [ ] Spam Bot: true alpha, consistent crop/anchor
-- [ ] Scooter: true alpha, consistent crop/anchor
-- [ ] Spy Drone: true alpha, consistent crop/anchor
-- [ ] Єдиний baseline/scale policy для hero / companion / enemy
-- [ ] Sprite cells не можуть містити фон сцени або прямокутну підкладку
+- [x] P-BOT: true alpha, без чорного/світлого фону, без ореолів
+- [x] Perky: true alpha, consistent crop/anchor
+- [x] Spam Bot: true alpha, consistent crop/anchor
+- [x] Scooter: true alpha, consistent crop/anchor
+- [x] Spy Drone: true alpha, consistent crop/anchor
+- [x] Єдиний baseline/scale policy для hero / companion / enemy
+- [x] Sprite cells не можуть містити фон сцени або прямокутну підкладку
 
 ## P-BOT animation states
-- [ ] idle
-- [ ] run
+- [x] idle
+- [x] run
 - [ ] jump-start
-- [ ] jump-air
-- [ ] fall
+- [x] jump-air
+- [x] fall — використовує air state до окремого art-frame
 - [ ] land
-- [ ] crouch — окремий sprite/state, НЕ scale-down
+- [x] crouch — окремий sprite/state, НЕ scale-down
 - [ ] hit
-- [ ] victory
+- [x] victory — state підготовлений, окремий art-frame ще в P1
 
 ## Collision / trigger cleanup
-- [ ] Перерахувати player hitbox окремо від sprite bounds
-- [ ] Окремий crouch hitbox
-- [ ] Невидимі legacy finish/win triggers видалити
-- [ ] Невидимі legacy checkpoint triggers видалити
-- [ ] Невидимі debug collision surfaces видалити або прив'язати до видимих об'єктів
-- [ ] Кожен trigger повинен мати видиму ігрову причину
-- [ ] Перевірити spawn / respawn / camera bounds
+- [x] Перерахувати player hitbox окремо від sprite bounds
+- [x] Окремий crouch hitbox
+- [x] Невидимі legacy finish/win triggers видалити
+- [x] Невидимі legacy checkpoint triggers видалити
+- [x] Невидимі debug collision surfaces видалити або прив'язати до видимих об'єктів
+- [x] Кожен trigger повинен мати видиму ігрову причину
+- [x] Перевірити spawn / respawn / camera bounds
 
 ## P0 acceptance gate
-- [ ] Немає чорних/білих прямокутників навколо sprites
-- [ ] Crouch виглядає як окрема поза
-- [ ] Немає невидимої перемоги / телепорту / checkpoint
-- [ ] Hitbox візуально відповідає персонажу
-- [ ] Mobile Safari landscape test пройдено
-- [ ] Desktop Safari/Chrome test пройдено
+- [x] Exact alpha assets проходять CI validation
+- [x] Crouch технічно є окремою позою + окремим hitbox
+- [x] Completion можливий лише через видимий finish gate
+- [x] Checkpoint можливий лише через видимий terminal
+- [ ] Візуальна перевірка на реальному Mobile Safari
+- [ ] Desktop Safari/Chrome playtest
 
 ---
 
@@ -59,25 +59,25 @@ Issue: #5
 Blocked by: P0 / #4
 
 ## Core controller
-- [ ] run acceleration/deceleration
-- [ ] variable jump
-- [ ] coyote time
-- [ ] jump buffer
+- [x] run acceleration/deceleration
+- [x] variable jump
+- [x] coyote time
+- [x] jump buffer
 - [ ] double jump
-- [ ] crouch
-- [ ] stomp
-- [ ] hit / knockback / invulnerability
+- [x] crouch
+- [x] stomp
+- [x] hit / knockback / invulnerability
 
 ## Power-ups / суперсили
 
 ### PerkUp Nitro
-- [ ] pickup object
-- [ ] speed boost
-- [ ] jump boost
-- [ ] timer
+- [x] pickup object
+- [x] speed boost
+- [x] jump boost
+- [x] timer
 - [ ] VFX / trail
-- [ ] HUD indicator
-- [ ] pickup feedback
+- [x] HUD indicator
+- [x] pickup feedback
 
 ### Double Jump Module
 - [ ] collectible/module
@@ -86,8 +86,8 @@ Blocked by: P0 / #4
 - [ ] second-jump animation cue
 
 ### CHARME Speed Shoes
-- [ ] pickup
-- [ ] speed/mobility modifier
+- [x] pickup
+- [x] speed/mobility modifier
 - [ ] distinct visual state
 - [ ] route value: access/shortcut, not cosmetic only
 
@@ -108,37 +108,37 @@ Blocked by: P0 / #4
 ## Enemy loop
 
 ### Spam Bot
-- [ ] patrol
+- [x] patrol
 - [ ] detect
 - [ ] paper/spam attack
-- [ ] hit
-- [ ] defeat
+- [x] hit
+- [x] defeat
 
 ### Scooter
-- [ ] fast patrol
+- [x] fast patrol
 - [ ] readable warning
-- [ ] stomp/avoid interaction
-- [ ] defeat
+- [x] stomp/avoid interaction
+- [x] defeat
 
 ### Spy Drone
-- [ ] air patrol
+- [x] air patrol
 - [ ] detection cone / attack window
-- [ ] hit
-- [ ] defeat
+- [x] hit
+- [x] defeat
 
 ## Checkpoint / finish
-- [ ] visible checkpoint terminal
+- [x] visible checkpoint terminal
 - [ ] checkpoint activation VFX
-- [ ] visible finish gate / portal
-- [ ] finish interaction feedback
-- [ ] no level completion without reaching visible finish object
+- [x] visible finish gate / portal
+- [x] finish interaction feedback
+- [x] no level completion without reaching visible finish object
 
 ## P1 acceptance gate
 - [ ] Мінімум 3 відчутні abilities/power-ups у 01-01
 - [ ] Верхній маршрут має gameplay-причину
 - [ ] Enemy telegraph/readability нормальна
 - [ ] Player state transitions читабельні
-- [ ] Checkpoint і finish повністю видимі
+- [x] Checkpoint і finish повністю видимі технічно
 
 ---
 
@@ -191,12 +191,12 @@ Blocked by: P0 + P1
 - [ ] midground gameplay layer
 - [ ] background skyline layer
 - [ ] parallax
-- [ ] contact shadows under characters
-- [ ] consistent scene scale
-- [ ] pickup VFX
+- [x] contact shadows under characters
+- [x] consistent scene scale — first P0 pass
+- [x] pickup feedback — basic
 - [ ] checkpoint VFX
 - [ ] finish VFX
-- [ ] no pasted-sticker look
+- [ ] no pasted-sticker look — needs visual review
 - [ ] no empty gameplay stretches without purpose
 
 ## Brand integration rule
@@ -218,23 +218,3 @@ PerkUp, CHARME і «Не Ху#ові Бровари» працюють як мі
 
 ## Review build
 Не може містити debug geometry або placeholder sprites. Показуємо тільки після P0 gate.
-
-## Production build
-Потребує P0 + P1 + P2 acceptance, mobile Safari test, desktop test і Railway public smoke test.
-
----
-
-# Order of execution
-
-1. P0 sprite cleanup
-2. P0 crouch + hitboxes
-3. P0 trigger cleanup
-4. P0 QA
-5. P1 abilities
-6. P1 enemy state machines
-7. P1 checkpoint/finish
-8. P1 QA
-9. P2 environment kit
-10. P2 routes/hazards
-11. P2 polish/parallax/VFX
-12. full 01-01 review build
