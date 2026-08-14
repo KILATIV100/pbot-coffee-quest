@@ -6,14 +6,13 @@
   <meta name="theme-color" content="#061015" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>P-BOT · Brovary Universe · Stage 2 v3</title>
-  <link rel="stylesheet" href="/styles.css" />
+  <title>P-BOT · Brovary Universe · Stage 2 v4</title>
+  <link rel="stylesheet" href="/styles.css?v=art6" />
 </head>
 <body>
   <div id="rotatePrompt" aria-hidden="true">
     <div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT працює горизонтально · 16:9</span></div>
   </div>
-
   <main id="app">
     <section id="intro" class="intro">
       <div class="intro-copy">
@@ -21,34 +20,25 @@
         <h1>Місто прокидається</h1>
         <p>WORLD 01 · Розвилка · Z0–Z3</p>
         <div class="stage-badges"><span>PERKUP NITRO</span><span>CHARME MOBILITY</span><span>ХБ INTEL</span></div>
-        <button id="startBtn">ЗАВАНТАЖЕННЯ…</button>
+        <button id="startBtn" disabled>ЗАВАНТАЖЕННЯ АРТУ…</button>
         <small>Місто — це рівень. Без видимих платформ.</small>
       </div>
     </section>
-
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="960" height="540" aria-label="P-BOT Stage 2 v3"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="P-BOT Stage 2 v4"></canvas>
       <div class="hud">
         <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
         <div class="world-chip"><b>01-01</b><span>Місто прокидається</span></div>
-        <div class="hud-right">
-          <div class="chip">☕ <b id="beans">0</b></div>
-          <div class="chip">✦ <b id="tokens">0</b></div>
-          <div class="chip">♥ <b id="lives">3</b></div>
-        </div>
+        <div class="hud-right"><div class="chip">☕ <b id="beans">0</b></div><div class="chip">✦ <b id="tokens">0</b></div><div class="chip">♥ <b id="lives">3</b></div></div>
       </div>
       <div id="toast" class="toast"></div>
       <div class="controls" aria-hidden="true">
-        <div class="move-controls">
-          <button data-key="left">◀</button><button data-key="right">▶</button>
-        </div>
-        <div class="action-controls">
-          <button data-key="down" class="small">▼</button><button data-key="jump" class="jump">▲</button>
-        </div>
+        <div class="move-controls"><button data-key="left">◀</button><button data-key="right">▶</button></div>
+        <div class="action-controls"><button data-key="down" class="small">▼</button><button data-key="jump" class="jump">▲</button></div>
       </div>
     </section>
   </main>
   <script src="/config.js"></script>
-  <script src="/game-stage2-v3.js"></script>
+  <script src="/game-stage2-v4.js?v=art6"></script>
 </body>
 </html>
