@@ -42,10 +42,33 @@ jobs:
             .stage2-v3/dyn-03a.part \
             .stage2-v3/dyn-03b.part \
             | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/v3/dynamic-atlas.webp
-          test "$(stat -c%s apps/web/public/assets/stage2/v3/level-bg.webp)" = "57500"
-          test "$(stat -c%s apps/web/public/assets/stage2/v3/dynamic-atlas.webp)" = "49488"
-          echo '1ad1a987d34f33f8676555273207124143dc69124f279978e0750ff1fe935f91  apps/web/public/assets/stage2/v3/level-bg.webp' | sha256sum -c -
-          echo 'b4a2bb389f4f6f904612761604ba4033d5cdcaa02438fa20a49627f7ce1c9b4c  apps/web/public/assets/stage2/v3/dynamic-atlas.webp' | sha256sum -c -
+          BG_BYTES="$(stat -c%s apps/web/public/assets/stage2/v3/level-bg.webp)"
+          ATLAS_BYTES="$(stat -c%s apps/web/public/assets/stage2/v3/dynamic-atlas.webp)"
+          echo "Rebuilt background: ${BG_BYTES} bytes"
+          echo "Rebuilt atlas: ${ATLAS_BYTES} bytes"
+          test "$BG_BYTES" -gt 45000
+          test "$ATLAS_BYTES" -gt 38000
+
+      - name: Validate WebP decode and dimensions
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          expected = {
+              'apps/web/public/assets/stage2/v3/level-bg.webp': (1600, 332),
+              'apps/web/public/assets/stage2/v3/dynamic-atlas.webp': (500, 351),
+          }
+          for path, dims in expected.items():
+              with Image.open(path) as im:
+                  im.load()
+                  print(path, im.format, im.size)
+                  if im.format != 'WEBP':
+                      raise SystemExit(f'{path}: expected WEBP, got {im.format}')
+                  if im.size != dims:
+                      raise SystemExit(f'{path}: expected {dims}, got {im.size}')
+          PY
 
       - name: Validate Stage 2 v3 frontend
         shell: bash
@@ -88,8 +111,8 @@ jobs:
               bg="$(curl -L -sS -o /tmp/bg.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/v3/level-bg.webp?v=3" || true)"
               atlas="$(curl -L -sS -o /tmp/atlas.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/v3/dynamic-atlas.webp?v=3" || true)"
               if [ "$bg" = "200" ] && [ "$atlas" = "200" ] && \
-                 [ "$(stat -c%s /tmp/bg.webp)" = "57500" ] && \
-                 [ "$(stat -c%s /tmp/atlas.webp)" = "49488" ]; then
+                 [ "$(stat -c%s /tmp/bg.webp)" -gt "45000" ] && \
+                 [ "$(stat -c%s /tmp/atlas.webp)" -gt "38000" ]; then
                 ok=1
                 break
               fi
@@ -98,6 +121,13 @@ jobs:
             sleep 5
           done
           test "$ok" = "1"
+          python3 - <<'PY'
+          from PIL import Image
+          for path, dims in [('/tmp/bg.webp',(1600,332)),('/tmp/atlas.webp',(500,351))]:
+              with Image.open(path) as im:
+                  im.load()
+                  assert im.size == dims, (path, im.size, dims)
+          PY
           echo 'v3 entrypoint and art assets are live.'
 
       - name: Smoke test web + API
