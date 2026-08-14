@@ -71,9 +71,10 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          D='$'
           railway variable set --service web --environment production --skip-deploys \
             NODE_ENV=production PORT=3000 \
-            'API_INTERNAL_URL=http://${{api.RAILWAY_PRIVATE_DOMAIN}}:3001'
+            "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
           railway up apps/web --path-as-root --service web --environment production --detach --json
 
       - name: Wait until v3 is actually live
