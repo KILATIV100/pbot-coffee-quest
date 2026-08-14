@@ -217,4 +217,4 @@ PerkUp, CHARME і «Не Ху#ові Бровари» працюють як мі
 Може містити debug overlays, collider view, FPS і trigger diagnostics.
 
 ## Review build
-Не може містити debug geometry або placeholder sprites. Показуємо тільки після P0 gate.
+Не може містити debug geometry або placeholder sprites. P0 review-build використовується тільки для acceptance-тесту; production vertical-slice статус даємо після закриття gate.
