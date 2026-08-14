@@ -1,0 +1,157 @@
+name: Railway Stage 2 P0 Cleanup
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/stage2-p0-trigger'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_NAME: pbot-brovary-universe
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+  PUBLIC_URL: https://web-production-f3e45.up.railway.app
+
+jobs:
+  deploy-p0:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild approved background
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p apps/web/public/assets/stage2/v3
+          cat \
+            .stage2-v3/bg-00.part \
+            .stage2-v3/bg-01a1.exact .stage2-v3/bg-01a2.exact .stage2-v3/bg-01a3.exact .stage2-v3/bg-01a4.exact \
+            .stage2-v3/bg-01b.fix .stage2-v3/bg-01c.fix .stage2-v3/bg-01d.fix \
+            .stage2-v3/bg-02.part .stage2-v3/bg-03.part .stage2-v3/bg-04.part \
+            | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/v3/level-bg.webp
+          test "$(stat -c%s apps/web/public/assets/stage2/v3/level-bg.webp)" = "57500"
+          echo '216d8da8cd4f1354b9be3e3e2fc6228a42925168dcb87f538076df8d264c6fb3  apps/web/public/assets/stage2/v3/level-bg.webp' | sha256sum -c -
+
+      - name: Rebuild P0 clean sprite atlases
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p apps/web/public/assets/stage2/p0
+          cat \
+            .stage2-p0/pbot-00.hex .stage2-p0/pbot-01.hex .stage2-p0/pbot-02.hex \
+            .stage2-p0/pbot-03.hex .stage2-p0/pbot-04.hex \
+            | tr -d '\n\r' \
+            | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" \
+            > apps/web/public/assets/stage2/p0/pbot-p0.webp
+          cat \
+            .stage2-p0/actors-00.hex \
+            .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex \
+            .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex \
+            | tr -d '\n\r' \
+            | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" \
+            > apps/web/public/assets/stage2/p0/actors-p0.webp
+          test "$(stat -c%s apps/web/public/assets/stage2/p0/pbot-p0.webp)" = "39542"
+          test "$(stat -c%s apps/web/public/assets/stage2/p0/actors-p0.webp)" = "25844"
+          echo 'a3b48a25da648128c1cdb04713df0087b1a43af3ddb5116fed08820eb1c3e802  apps/web/public/assets/stage2/p0/pbot-p0.webp' | sha256sum -c -
+          echo '7b50d356eeca7475308285f66d12aa9e32f8b7ecdee0d6e92eb9d78e92cef27c  apps/web/public/assets/stage2/p0/actors-p0.webp' | sha256sum -c -
+
+      - name: Validate alpha, dimensions and P0 runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          tests = [
+            ('apps/web/public/assets/stage2/v3/level-bg.webp',(1600,332),False,0),
+            ('apps/web/public/assets/stage2/p0/pbot-p0.webp',(420,330),True,.50),
+            ('apps/web/public/assets/stage2/p0/actors-p0.webp',(360,348),True,.60),
+          ]
+          for path,dims,needs_alpha,min_transparent in tests:
+            with Image.open(path) as src:
+              src.load()
+              assert src.format == 'WEBP', (path,src.format)
+              assert src.size == dims, (path,src.size,dims)
+              if needs_alpha:
+                im=src.convert('RGBA'); a=im.getchannel('A'); hist=a.histogram(); total=sum(hist)
+                transparent=sum(hist[:16])/total
+                assert a.getextrema()==(0,255), (path,a.getextrema())
+                assert transparent > min_transparent, (path,transparent,min_transparent)
+                print(path, dims, 'transparent', round(transparent,3))
+              else:
+                print(path, dims)
+          PY
+          node --check apps/web/public/game-stage2-p0.js
+          node --check apps/web/server.js
+          grep -q 'width="960" height="540"' apps/web/public/index.html
+          grep -q 'game-stage2-p0.js' apps/web/public/index.html
+          ! grep -q 'game-stage2-v4.js' apps/web/public/index.html
+          grep -q "crouch:\[215,175,91,121\]" apps/web/public/game-stage2-p0.js
+          grep -q 'crouchH:58' apps/web/public/game-stage2-p0.js
+          grep -q 'finishGate' apps/web/public/game-stage2-p0.js
+          grep -q 'drawFinish' apps/web/public/game-stage2-p0.js
+          grep -q 'drawCheckpoint' apps/web/public/game-stage2-p0.js
+          ! grep -q 'player.x>2265' apps/web/public/game-stage2-p0.js
+          ! grep -q 'safeMode' apps/web/public/game-stage2-p0.js
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.40.1
+
+      - name: Authenticate and link Railway
+        shell: bash
+        run: |
+          set -euo pipefail
+          railway whoami --json
+          railway link --project "$PROJECT_NAME" --environment production --json
+
+      - name: Configure and deploy P0 web
+        shell: bash
+        run: |
+          set -euo pipefail
+          D='$'
+          railway variable set --service web --environment production --skip-deploys \
+            NODE_ENV=production PORT=3000 \
+            "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
+          railway up apps/web --path-as-root --service web --environment production --detach --json
+
+      - name: Verify P0 public build and exact assets
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 120); do
+            stamp="$(date +%s)"
+            index_code="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?p0=${stamp}" || true)"
+            js_code="$(curl -L -sS -o /tmp/game.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-p0.js?p0=${stamp}" || true)"
+            pbot_code="$(curl -L -sS -o /tmp/pbot.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/p0/pbot-p0.webp?p0=${stamp}" || true)"
+            actors_code="$(curl -L -sS -o /tmp/actors.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/p0/actors-p0.webp?p0=${stamp}" || true)"
+            if [ "$index_code" = 200 ] && [ "$js_code" = 200 ] && [ "$pbot_code" = 200 ] && [ "$actors_code" = 200 ] && \
+               grep -q 'game-stage2-p0.js' /tmp/index.html && grep -q "BUILD = 'p0-1'" /tmp/game.js && \
+               [ "$(stat -c%s /tmp/pbot.webp)" = 39542 ] && [ "$(stat -c%s /tmp/actors.webp)" = 25844 ] && \
+               echo 'a3b48a25da648128c1cdb04713df0087b1a43af3ddb5116fed08820eb1c3e802  /tmp/pbot.webp' | sha256sum -c - >/dev/null 2>&1 && \
+               echo '7b50d356eeca7475308285f66d12aa9e32f8b7ecdee0d6e92eb9d78e92cef27c  /tmp/actors.webp' | sha256sum -c - >/dev/null 2>&1; then
+              ok=1; break
+            fi
+            echo "Waiting P0 ${i}/120 index=${index_code} js=${js_code} pbot=${pbot_code} actors=${actors_code}"
+            sleep 5
+          done
+          test "$ok" = 1
+          python3 - <<'PY'
+          from PIL import Image
+          for path,dims in [('/tmp/pbot.webp',(420,330)),('/tmp/actors.webp',(360,348))]:
+            with Image.open(path) as im:
+              im.load(); assert im.size == dims; assert im.convert('RGBA').getchannel('A').getextrema()==(0,255)
+          PY
+          echo 'P0 clean sprites + dedicated crouch + visible triggers are live.'
+
+      - name: Smoke test API
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta")" = 200
+          grep -q '"db":true' /tmp/meta.json
+          cat /tmp/meta.json
+          echo "Stage 2 P0 cleanup live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
