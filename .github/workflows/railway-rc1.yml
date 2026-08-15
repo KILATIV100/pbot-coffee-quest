@@ -26,12 +26,73 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p apps/web/public/assets/stage2/rc1 apps/web/public/assets/stage2/p0
-          cat .stage2-rc1/bg-00.b64 .stage2-rc1/bg-01.b64 .stage2-rc1/bg-02.b64 .stage2-rc1/bg-03.b64 .stage2-rc1/bg-04.b64 .stage2-rc1/bg-05.b64 \
-            | tr -d '\n\r' | base64 --ignore-garbage --decode > apps/web/public/assets/stage2/rc1/bg-loop.webp
-          cat .stage2-rc1/pbot3-00.b64 .stage2-rc1/pbot3-01.b64 .stage2-rc1/pbot3-02.b64 \
-            | tr -d '\n\r' | base64 --ignore-garbage --decode > apps/web/public/assets/stage2/rc1/pbot-atlas.webp
-          cat .stage2-rc1/props3-00.b64 .stage2-rc1/props3-01.b64 .stage2-rc1/props3-02.b64 .stage2-rc1/props3-03.b64 .stage2-rc1/props3-04.b64 .stage2-rc1/props3-05.b64 \
-            | tr -d '\n\r' | base64 --ignore-garbage --decode > apps/web/public/assets/stage2/rc1/props-atlas.webp
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, hashlib
+
+          ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
+
+          def rebuild(name, parts, output, expected_size, expected_sha):
+              raw = ''.join(Path(p).read_text(encoding='utf-8') for p in parts)
+              raw = raw.replace('\n', '').replace('\r', '')
+              bad = [i for i, ch in enumerate(raw) if ch not in ALPHABET]
+
+              def exact_decode(text):
+                  try:
+                      data = base64.b64decode(text, validate=True)
+                  except Exception:
+                      return None
+                  if len(data) != expected_size:
+                      return None
+                  if hashlib.sha256(data).hexdigest() != expected_sha:
+                      return None
+                  return data
+
+              data = exact_decode(raw)
+              repaired = None
+              if data is None and len(bad) == 1:
+                  pos = bad[0]
+                  original = raw[pos]
+                  for replacement in ALPHABET:
+                      candidate = raw[:pos] + replacement + raw[pos + 1:]
+                      data = exact_decode(candidate)
+                      if data is not None:
+                          repaired = (pos, original, replacement)
+                          break
+
+              if data is None:
+                  visible_bad = [(i, repr(raw[i])) for i in bad[:10]]
+                  raise SystemExit(
+                      f'{name}: unrecoverable base64 stream; chars={len(raw)} mod4={len(raw)%4} bad={visible_bad}'
+                  )
+
+              Path(output).write_bytes(data)
+              if repaired:
+                  print(f'{name}: deterministic repair pos={repaired[0]} {repaired[1]!r}->{repaired[2]!r}')
+              print(f'{name}: OK bytes={len(data)} sha256={expected_sha}')
+
+          rebuild(
+              'bg',
+              [f'.stage2-rc1/bg-{i:02}.b64' for i in range(6)],
+              'apps/web/public/assets/stage2/rc1/bg-loop.webp',
+              64932,
+              '78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52',
+          )
+          rebuild(
+              'pbot',
+              [f'.stage2-rc1/pbot3-{i:02}.b64' for i in range(3)],
+              'apps/web/public/assets/stage2/rc1/pbot-atlas.webp',
+              35350,
+              'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c',
+          )
+          rebuild(
+              'props',
+              [f'.stage2-rc1/props3-{i:02}.b64' for i in range(6)],
+              'apps/web/public/assets/stage2/rc1/props-atlas.webp',
+              71838,
+              '11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed',
+          )
+          PY
           cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex \
             | tr -d '\n\r' | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" \
             > apps/web/public/assets/stage2/p0/actors-p0.webp
