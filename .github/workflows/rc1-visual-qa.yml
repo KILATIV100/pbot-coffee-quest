@@ -50,9 +50,8 @@ jobs:
               assert min(margins)>=1,(name,bbox,margins)
 
           props_raw=read_parts([f'.stage2-rc1/props3-{i:02}.b64' for i in range(6)])
-          assert len(props_raw)==95785
-          assert props_raw[32000]=='Z'
-          props_data=decode_exact(props_raw[:32000]+props_raw[32001:],71838,'11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed')
+          assert len(props_raw)==95784,len(props_raw)
+          props_data=decode_exact(props_raw,71838,'11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed')
           props=Image.open(BytesIO(props_data)).convert('RGBA')
           assert props.size==(600,345)
           prop_names=['perkup','charme','billboard','checkpoint','nitro','bean','token','barrier','scooter','spam','drone','finish']
@@ -63,9 +62,8 @@ jobs:
               assert bbox is not None,name
 
           bg_raw=read_parts([f'.stage2-rc1/bg-{i:02}.b64' for i in range(6)])
-          assert len(bg_raw)==86577
-          assert bg_raw[-1]=='q'
-          bg_data=decode_exact(bg_raw[:-1],64932,'78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52')
+          assert len(bg_raw)==86576,len(bg_raw)
+          bg_data=decode_exact(bg_raw,64932,'78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52')
           bg=Image.open(BytesIO(bg_data)).convert('RGB')
           assert bg.size==(1440,480)
           def delta(x1,x2):
@@ -76,5 +74,5 @@ jobs:
           ratio=seam/max(baseline,0.01)
           print(f'BG seam mean-delta={seam:.3f} edge-baseline={baseline:.3f} ratio={ratio:.3f}')
           assert seam <= max(18.0, baseline*2.5),(seam,baseline,ratio)
-          print('RC1 visual contract: PASS')
+          print('RC1 clean-source visual contract: PASS')
           PY
