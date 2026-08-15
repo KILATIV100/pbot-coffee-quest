@@ -1,2 +1,2 @@
-triggered_at=2026-08-15T21:34:00+03:00
-purpose=run-stage2-rc1-production-gate-after-decoder-fix
+triggered_at=2026-08-15T21:38:00+03:00
+purpose=run-stage2-rc1-deterministic-asset-repair-gate
