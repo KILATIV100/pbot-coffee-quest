@@ -1,0 +1,80 @@
+name: Stage 2 RC1 Visual Contract
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/rc1-visual-trigger'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  visual-contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate sprite framing and background seam
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from pathlib import Path
+          from io import BytesIO
+          import base64, hashlib
+          from PIL import Image, ImageChops, ImageStat
+
+          def read_parts(paths):
+              return ''.join(Path(p).read_text(encoding='utf-8').replace('\n','').replace('\r','') for p in paths)
+
+          def decode_exact(raw, size, sha):
+              data=base64.b64decode(raw, validate=True)
+              assert len(data)==size,(len(data),size)
+              assert hashlib.sha256(data).hexdigest()==sha
+              return data
+
+          pbot_raw=read_parts([f'.stage2-rc1/pbot3-{i:02}.b64' for i in range(3)])
+          pbot_data=decode_exact(pbot_raw,35350,'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c')
+          pbot=Image.open(BytesIO(pbot_data)).convert('RGBA')
+          assert pbot.size==(560,280)
+          names=['idle','run1','run2','run3','run4','run5','crouch','jump']
+          for i,name in enumerate(names):
+              x=(i%4)*140; y=(i//4)*140
+              a=pbot.crop((x,y,x+140,y+140)).getchannel('A')
+              bbox=a.getbbox()
+              assert bbox is not None,name
+              margins=(bbox[0],bbox[1],140-bbox[2],140-bbox[3])
+              print(f'PBOT {name}: bbox={bbox} margins={margins}')
+              assert min(margins)>=1,(name,bbox,margins)
+
+          props_raw=read_parts([f'.stage2-rc1/props3-{i:02}.b64' for i in range(6)])
+          assert len(props_raw)==95785
+          assert props_raw[32000]=='Z'
+          props_data=decode_exact(props_raw[:32000]+props_raw[32001:],71838,'11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed')
+          props=Image.open(BytesIO(props_data)).convert('RGBA')
+          assert props.size==(600,345)
+          prop_names=['perkup','charme','billboard','checkpoint','nitro','bean','token','barrier','scooter','spam','drone','finish']
+          for i,name in enumerate(prop_names):
+              x=(i%4)*150; y=(i//4)*115
+              bbox=props.crop((x,y,x+150,y+115)).getchannel('A').getbbox()
+              print(f'PROP {name}: bbox={bbox}')
+              assert bbox is not None,name
+
+          bg_raw=read_parts([f'.stage2-rc1/bg-{i:02}.b64' for i in range(6)])
+          assert len(bg_raw)==86577
+          assert bg_raw[-1]=='q'
+          bg_data=decode_exact(bg_raw[:-1],64932,'78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52')
+          bg=Image.open(BytesIO(bg_data)).convert('RGB')
+          assert bg.size==(1440,480)
+          def delta(x1,x2):
+              d=ImageChops.difference(bg.crop((x1,0,x1+1,480)),bg.crop((x2,0,x2+1,480)))
+              return sum(ImageStat.Stat(d).mean)/3
+          seam=delta(1439,0)
+          baseline=(delta(0,1)+delta(1438,1439))/2
+          ratio=seam/max(baseline,0.01)
+          print(f'BG seam mean-delta={seam:.3f} edge-baseline={baseline:.3f} ratio={ratio:.3f}')
+          assert seam <= max(18.0, baseline*2.5),(seam,baseline,ratio)
+          print('RC1 visual contract: PASS')
+          PY
