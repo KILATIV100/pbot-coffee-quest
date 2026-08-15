@@ -1,2 +1,2 @@
-triggered_at=2026-08-15T16:03:00+03:00
-purpose=deploy-stage2-rc1-sprite-only-release
+triggered_at=2026-08-15T21:24:00+03:00
+purpose=redeploy-stage2-rc1-after-base64-gate-fix
