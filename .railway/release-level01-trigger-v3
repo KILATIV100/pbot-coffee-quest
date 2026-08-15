@@ -1,0 +1,5 @@
+release=world01-level01
+version=release-01
+background=exact-sha
+sentinel=true
+triggered=2026-08-15T08:55:00+03:00
