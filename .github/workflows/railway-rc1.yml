@@ -27,11 +27,11 @@ jobs:
           set -euo pipefail
           mkdir -p apps/web/public/assets/stage2/rc1 apps/web/public/assets/stage2/p0
           cat .stage2-rc1/bg-00.b64 .stage2-rc1/bg-01.b64 .stage2-rc1/bg-02.b64 .stage2-rc1/bg-03.b64 .stage2-rc1/bg-04.b64 .stage2-rc1/bg-05.b64 \
-            | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/rc1/bg-loop.webp
+            | tr -d '\n\r' | base64 --ignore-garbage --decode > apps/web/public/assets/stage2/rc1/bg-loop.webp
           cat .stage2-rc1/pbot3-00.b64 .stage2-rc1/pbot3-01.b64 .stage2-rc1/pbot3-02.b64 \
-            | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/rc1/pbot-atlas.webp
+            | tr -d '\n\r' | base64 --ignore-garbage --decode > apps/web/public/assets/stage2/rc1/pbot-atlas.webp
           cat .stage2-rc1/props3-00.b64 .stage2-rc1/props3-01.b64 .stage2-rc1/props3-02.b64 .stage2-rc1/props3-03.b64 .stage2-rc1/props3-04.b64 .stage2-rc1/props3-05.b64 \
-            | tr -d '\n\r' | base64 --decode > apps/web/public/assets/stage2/rc1/props-atlas.webp
+            | tr -d '\n\r' | base64 --ignore-garbage --decode > apps/web/public/assets/stage2/rc1/props-atlas.webp
           cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex \
             | tr -d '\n\r' | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" \
             > apps/web/public/assets/stage2/p0/actors-p0.webp
