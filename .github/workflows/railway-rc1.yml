@@ -32,9 +32,13 @@ jobs:
 
           ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/='
 
-          def rebuild(name, parts, output, expected_size, expected_sha):
-              raw = ''.join(Path(p).read_text(encoding='utf-8') for p in parts)
-              raw = raw.replace('\n', '').replace('\r', '')
+          def rebuild(name, parts, output, expected_size, expected_sha, delete_part_index=None):
+              cleaned_parts = [
+                  Path(p).read_text(encoding='utf-8').replace('\n', '').replace('\r', '')
+                  for p in parts
+              ]
+              raw = ''.join(cleaned_parts)
+              expected_b64_len = 4 * ((expected_size + 2) // 3)
               bad = [i for i, ch in enumerate(raw) if ch not in ALPHABET]
 
               def exact_decode(text):
@@ -50,6 +54,7 @@ jobs:
 
               data = exact_decode(raw)
               repaired = None
+
               if data is None and len(bad) == 1:
                   pos = bad[0]
                   original = raw[pos]
@@ -57,18 +62,38 @@ jobs:
                       candidate = raw[:pos] + replacement + raw[pos + 1:]
                       data = exact_decode(candidate)
                       if data is not None:
-                          repaired = (pos, original, replacement)
+                          repaired = ('replace', pos, original, replacement)
+                          break
+
+              if (
+                  data is None
+                  and not bad
+                  and len(raw) == expected_b64_len + 1
+                  and delete_part_index is not None
+              ):
+                  start = sum(len(p) for p in cleaned_parts[:delete_part_index])
+                  end = start + len(cleaned_parts[delete_part_index])
+                  for pos in range(start, end):
+                      candidate = raw[:pos] + raw[pos + 1:]
+                      data = exact_decode(candidate)
+                      if data is not None:
+                          repaired = ('delete', pos, raw[pos], '')
                           break
 
               if data is None:
                   visible_bad = [(i, repr(raw[i])) for i in bad[:10]]
                   raise SystemExit(
-                      f'{name}: unrecoverable base64 stream; chars={len(raw)} mod4={len(raw)%4} bad={visible_bad}'
+                      f'{name}: unrecoverable base64 stream; chars={len(raw)} expected={expected_b64_len} '
+                      f'mod4={len(raw)%4} bad={visible_bad}'
                   )
 
               Path(output).write_bytes(data)
               if repaired:
-                  print(f'{name}: deterministic repair pos={repaired[0]} {repaired[1]!r}->{repaired[2]!r}')
+                  action, pos, original, replacement = repaired
+                  print(
+                      f'{name}: deterministic {action} repair pos={pos} '
+                      f'{original!r}->{replacement!r}'
+                  )
               print(f'{name}: OK bytes={len(data)} sha256={expected_sha}')
 
           rebuild(
@@ -77,6 +102,7 @@ jobs:
               'apps/web/public/assets/stage2/rc1/bg-loop.webp',
               64932,
               '78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52',
+              delete_part_index=5,
           )
           rebuild(
               'pbot',
@@ -91,6 +117,7 @@ jobs:
               'apps/web/public/assets/stage2/rc1/props-atlas.webp',
               71838,
               '11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed',
+              delete_part_index=1,
           )
           PY
           cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex \
