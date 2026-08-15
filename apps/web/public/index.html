@@ -6,8 +6,8 @@
   <meta name="theme-color" content="#061015" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>P-BOT · Brovary Universe · 01-01 Working Build</title>
-  <link rel="stylesheet" href="/styles.css?v=working-r1" />
+  <title>P-BOT · Brovary Universe · 01-01 Release</title>
+  <link rel="stylesheet" href="/styles.css?v=release-01" />
 </head>
 <body>
   <div id="rotatePrompt" aria-hidden="true">
@@ -18,19 +18,18 @@
       <div class="intro-copy">
         <div class="eyebrow">P-BOT · BROVARY UNIVERSE</div>
         <h1>Місто прокидається</h1>
-        <p>WORLD 01 · LEVEL 01 · WORKING BUILD</p>
+        <p>WORLD 01 · LEVEL 01 · RELEASE</p>
         <div class="stage-badges"><span>NITRO</span><span>DOUBLE JUMP</span><span>CHARME BOOST</span><span>PERKY PULSE</span></div>
         <button id="startBtn" disabled>ЗАВАНТАЖЕННЯ…</button>
-        <small>Окремі об’єкти · видимі небезпеки · checkpoint · фініш</small>
+        <small>Background-only світ · clean sprites · видимий checkpoint і фініш</small>
       </div>
     </section>
-
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="960" height="540" aria-label="P-BOT World 01 Level 01"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="P-BOT World 01 Level 01 release"></canvas>
       <div class="hud">
         <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
         <div class="world-chip"><b>01-01</b><span>Місто прокидається</span></div>
-        <div id="abilityState" class="ability-chip">PERKY PULSE</div>
+        <div class="ability-chip">PERKY PULSE · R</div>
         <div class="hud-right">
           <div class="chip">☕ <b id="beans">0</b></div>
           <div class="chip">✦ <b id="tokens">0</b></div>
@@ -52,6 +51,6 @@
     </section>
   </main>
   <script src="/config.js"></script>
-  <script src="/game-stage2-working.js?v=working-r1"></script>
+  <script src="/game-stage2-release.js?v=release-01"></script>
 </body>
 </html>
