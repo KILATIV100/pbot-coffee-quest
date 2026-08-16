@@ -1,0 +1,143 @@
+name: Railway Stage 2 RC2
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.railway/rc2-trigger'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  PROJECT_NAME: pbot-brovary-universe
+  RAILWAY_API_TOKEN: ${{ secrets.RAILWAY_API_TOKEN }}
+  PUBLIC_URL: https://web-production-f3e45.up.railway.app
+
+jobs:
+  deploy-rc2:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Rebuild verified sprite assets from clean source
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p apps/web/public/assets/stage2/rc1 apps/web/public/assets/stage2/p0
+          python3 - <<'PY'
+          from pathlib import Path
+          import base64, hashlib
+
+          def rebuild(name, parts, output, expected_chars, expected_size, expected_sha):
+              raw=''.join(Path(p).read_text(encoding='utf-8').replace('\n','').replace('\r','') for p in parts)
+              assert len(raw)==expected_chars,(name,len(raw),expected_chars)
+              data=base64.b64decode(raw,validate=True)
+              assert len(data)==expected_size,(name,len(data),expected_size)
+              digest=hashlib.sha256(data).hexdigest()
+              assert digest==expected_sha,(name,digest,expected_sha)
+              Path(output).write_bytes(data)
+              print(f'{name}: clean source OK bytes={len(data)} sha256={digest}')
+
+          rebuild('bg',[f'.stage2-rc1/bg-{i:02}.b64' for i in range(6)],'apps/web/public/assets/stage2/rc1/bg-loop.webp',86576,64932,'78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52')
+          rebuild('pbot',[f'.stage2-rc1/pbot3-{i:02}.b64' for i in range(3)],'apps/web/public/assets/stage2/rc1/pbot-atlas.webp',47136,35350,'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c')
+          rebuild('props',[f'.stage2-rc1/props3-{i:02}.b64' for i in range(6)],'apps/web/public/assets/stage2/rc1/props-atlas.webp',95784,71838,'11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed')
+          PY
+          cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex \
+            | tr -d '\n\r' | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" \
+            > apps/web/public/assets/stage2/p0/actors-p0.webp
+          test "$(stat -c%s apps/web/public/assets/stage2/p0/actors-p0.webp)" = 25844
+          echo '3b3c8e1d986849e83feb1f22815d1b00143c29012d833a6c5a0fbf04677015e2  apps/web/public/assets/stage2/p0/actors-p0.webp' | sha256sum -c -
+
+      - name: Validate RC2 visual and gameplay contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 -m pip install --quiet pillow
+          python3 - <<'PY'
+          from PIL import Image
+          tests=[
+            ('apps/web/public/assets/stage2/rc1/bg-loop.webp',(1440,480),False),
+            ('apps/web/public/assets/stage2/rc1/pbot-atlas.webp',(560,280),True),
+            ('apps/web/public/assets/stage2/rc1/props-atlas.webp',(600,345),True),
+            ('apps/web/public/assets/stage2/p0/actors-p0.webp',(360,348),True),
+          ]
+          for path,size,alpha in tests:
+            with Image.open(path) as im:
+              im.load(); assert im.format=='WEBP'; assert im.size==size,(path,im.size,size)
+              if alpha: assert im.convert('RGBA').getchannel('A').getextrema()==(0,255),path
+              print(path,im.size,im.mode)
+          PY
+          node --check apps/web/public/game-stage2-rc2.js
+          node --check apps/web/server.js
+          grep -q 'game-stage2-rc2.js' apps/web/public/index.html
+          grep -q "BUILD='rc2-02-00'" apps/web/public/game-stage2-rc2.js
+          grep -q 'WORLD=6200' apps/web/public/game-stage2-rc2.js
+          grep -q 'const ZONES=' apps/web/public/game-stage2-rc2.js
+          grep -q 'platforms=\[' apps/web/public/game-stage2-rc2.js
+          grep -q 'function drawPlatform' apps/web/public/game-stage2-rc2.js
+          grep -q 'function spawnBurst' apps/web/public/game-stage2-rc2.js
+          grep -q 'targetY=clamp' apps/web/public/game-stage2-rc2.js
+          grep -q 'look=clamp(player.vx' apps/web/public/game-stage2-rc2.js
+          grep -q 'updateEnemies' apps/web/public/game-stage2-rc2.js
+          grep -q 'RC2 GAME FEEL PASS' apps/web/public/index.html
+          ! grep -q 'game-stage2-rc1.js' apps/web/public/index.html
+          ! grep -q 'drawStore(' apps/web/public/game-stage2-rc2.js
+          ! grep -q 'drawTree(' apps/web/public/game-stage2-rc2.js
+          ! grep -q 'drawBusStop(' apps/web/public/game-stage2-rc2.js
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli@5.40.1
+
+      - name: Authenticate and link Railway
+        shell: bash
+        run: |
+          set -euo pipefail
+          railway whoami --json
+          railway link --project "$PROJECT_NAME" --environment production --json
+
+      - name: Deploy RC2 web
+        shell: bash
+        run: |
+          set -euo pipefail
+          D='$'
+          railway variable set --service web --environment production --skip-deploys \
+            NODE_ENV=production PORT=3000 \
+            "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
+          railway up apps/web --path-as-root --service web --environment production --detach --json
+
+      - name: Verify public RC2
+        shell: bash
+        run: |
+          set -euo pipefail
+          ok=0
+          for i in $(seq 1 120); do
+            stamp="$(date +%s)"
+            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc2=${stamp}" || true)"
+            jc="$(curl -L -sS -o /tmp/game.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2.js?rc2=${stamp}" || true)"
+            bc="$(curl -L -sS -o /tmp/bg.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/bg-loop.webp?rc2=${stamp}" || true)"
+            pc="$(curl -L -sS -o /tmp/pbot.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/pbot-atlas.webp?rc2=${stamp}" || true)"
+            ac="$(curl -L -sS -o /tmp/props.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/props-atlas.webp?rc2=${stamp}" || true)"
+            if [ "$ic" = 200 ] && [ "$jc" = 200 ] && [ "$bc" = 200 ] && [ "$pc" = 200 ] && [ "$ac" = 200 ] && \
+               grep -q 'game-stage2-rc2.js' /tmp/index.html && grep -q "BUILD='rc2-02-00'" /tmp/game.js && \
+               [ "$(stat -c%s /tmp/bg.webp)" = 64932 ] && [ "$(stat -c%s /tmp/pbot.webp)" = 35350 ] && [ "$(stat -c%s /tmp/props.webp)" = 71838 ] && \
+               echo '78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52  /tmp/bg.webp' | sha256sum -c - >/dev/null 2>&1 && \
+               echo 'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c  /tmp/pbot.webp' | sha256sum -c - >/dev/null 2>&1 && \
+               echo '11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed  /tmp/props.webp' | sha256sum -c - >/dev/null 2>&1; then
+              ok=1; break
+            fi
+            echo "Waiting RC2 ${i}/120 index=${ic} js=${jc} bg=${bc} pbot=${pc} props=${ac}"
+            sleep 5
+          done
+          test "$ok" = 1
+          echo 'RC2 public runtime and exact sprite assets verified.'
+
+      - name: Smoke test API
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta")" = 200
+          grep -q '"db":true' /tmp/meta.json
+          cat /tmp/meta.json
+          echo "Stage 2 RC2 live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
