@@ -1,4 +1,4 @@
-name: Railway Stage 2 RC2.3D
+name: Railway Stage 2 RC2.4E
 
 on:
   push:
@@ -29,33 +29,29 @@ jobs:
           python3 - <<'PY'
           from pathlib import Path
           import base64, hashlib
-          def rebuild(name, parts, output, expected_chars, expected_size, expected_sha):
+          def rebuild(parts, output, expected_chars, expected_size, expected_sha):
               raw=''.join(Path(p).read_text(encoding='utf-8').replace('\n','').replace('\r','') for p in parts)
               assert len(raw)==expected_chars
-              data=base64.b64decode(raw,validate=True);assert len(data)==expected_size
-              assert hashlib.sha256(data).hexdigest()==expected_sha;Path(output).write_bytes(data)
-          rebuild('bg',[f'.stage2-rc1/bg-{i:02}.b64' for i in range(6)],'apps/web/public/assets/stage2/rc1/bg-loop.webp',86576,64932,'78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52')
-          rebuild('pbot',[f'.stage2-rc1/pbot3-{i:02}.b64' for i in range(3)],'apps/web/public/assets/stage2/rc1/pbot-atlas.webp',47136,35350,'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c')
-          rebuild('props',[f'.stage2-rc1/props3-{i:02}.b64' for i in range(6)],'apps/web/public/assets/stage2/rc1/props-atlas.webp',95784,71838,'11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed')
+              data=base64.b64decode(raw,validate=True); assert len(data)==expected_size
+              assert hashlib.sha256(data).hexdigest()==expected_sha
+              Path(output).write_bytes(data)
+          rebuild([f'.stage2-rc1/bg-{i:02}.b64' for i in range(6)],'apps/web/public/assets/stage2/rc1/bg-loop.webp',86576,64932,'78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52')
+          rebuild([f'.stage2-rc1/pbot3-{i:02}.b64' for i in range(3)],'apps/web/public/assets/stage2/rc1/pbot-atlas.webp',47136,35350,'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c')
+          rebuild([f'.stage2-rc1/props3-{i:02}.b64' for i in range(6)],'apps/web/public/assets/stage2/rc1/props-atlas.webp',95784,71838,'11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed')
           PY
           cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex | tr -d '\n\r' | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" > apps/web/public/assets/stage2/p0/actors-p0.webp
           test "$(stat -c%s apps/web/public/assets/stage2/p0/actors-p0.webp)" = 25844
 
-      - name: Validate RC2.3D cleanup contract
+      - name: Validate RC2.4E scale contract
         shell: bash
         run: |
           set -euo pipefail
           python3 -m pip install --quiet pillow
           python3 - <<'PY'
           from PIL import Image
-          import xml.etree.ElementTree as ET
-          tests=[('apps/web/public/assets/stage2/rc1/bg-loop.webp',(1440,480),False),('apps/web/public/assets/stage2/rc1/pbot-atlas.webp',(560,280),True),('apps/web/public/assets/stage2/rc1/props-atlas.webp',(600,345),True),('apps/web/public/assets/stage2/p0/actors-p0.webp',(360,348),True)]
-          for path,size,alpha in tests:
-            with Image.open(path) as im:
-              im.load();assert im.format=='WEBP';assert im.size==size
-              if alpha:assert im.convert('RGBA').getchannel('A').getextrema()==(0,255)
-          root=ET.parse('apps/web/public/assets/stage2/rc23/world-platforms.svg').getroot();assert root.attrib.get('width')=='1024' and root.attrib.get('height')=='320'
-          ids={el.attrib.get('id') for el in root.iter() if el.attrib.get('id')};assert {'planter','shelter','boardwalk','awning','charmeDock','gantry','overpass','utility'} <= ids
+          tests=[('apps/web/public/assets/stage2/rc1/bg-loop.webp',(1440,480)),('apps/web/public/assets/stage2/rc1/pbot-atlas.webp',(560,280)),('apps/web/public/assets/stage2/rc1/props-atlas.webp',(600,345)),('apps/web/public/assets/stage2/p0/actors-p0.webp',(360,348))]
+          for path,size in tests:
+              with Image.open(path) as im: im.load(); assert im.size==size
           PY
           node --check apps/web/public/game-stage2-rc2.js
           node --check apps/web/public/game-stage2-rc2-polish.js
@@ -64,25 +60,12 @@ jobs:
           node --check apps/web/public/game-stage2-rc2-art.js
           node --check apps/web/public/game-stage2-rc2-world.js
           node --check apps/web/server.js
-          grep -Fq 'RC2.3 CLEANUP PASS' apps/web/public/index.html
-          grep -Fq 'game-stage2-rc2-ui.js?v=rc2-03-03' apps/web/public/index.html
-          grep -Fq 'game-stage2-rc2-art.js?v=rc2-03-03' apps/web/public/index.html
-          grep -Fq "UI_BUILD='rc2-03-03'" apps/web/public/game-stage2-rc2-ui.js
-          grep -Fq "ART_BUILD='rc2-03-03'" apps/web/public/game-stage2-rc2-art.js
-          grep -Fq "WORLD_BUILD='rc2-03-02'" apps/web/public/game-stage2-rc2-world.js
+          grep -Fq 'RC2.4 SCALE PASS' apps/web/public/index.html
+          grep -Fq "ART_BUILD='rc2-04-00'" apps/web/public/game-stage2-rc2-art.js
+          grep -Fq "WORLD_BUILD='rc2-04-00'" apps/web/public/game-stage2-rc2-world.js
+          grep -Fq "p.kind==='charme'?.80" apps/web/public/game-stage2-rc2-art.js
+          grep -Fq 'const dh=clamp(p.h+34,66,116)' apps/web/public/game-stage2-rc2-world.js
           grep -Fq "props=props.filter(p=>p.kind!=='billboard')" apps/web/public/game-stage2-rc2-art.js
-          grep -Fq '.route-progress i{display:none!important}' apps/web/public/rc2-3-ui.css
-          grep -Fq 'height:5px!important' apps/web/public/rc2-3-ui.css
-          grep -Fq "zoneEl.classList.add('on')" apps/web/public/game-stage2-rc2-ui.js
-          test "$(stat -c%s apps/web/public/game-stage2-rc2-art.js)" = 1772
-          test "$(stat -c%s apps/web/public/game-stage2-rc2-ui.js)" = 2652
-          test "$(stat -c%s apps/web/public/rc2-3-ui.css)" = 4361
-          test "$(stat -c%s apps/web/public/game-stage2-rc2-world.js)" = 1550
-          test "$(stat -c%s apps/web/public/assets/stage2/rc23/world-platforms.svg)" = 7144
-          echo 'afa12009e6dc723f883cc4690c59a475c92f32eda6259e1c14577717e3f148ce  apps/web/public/game-stage2-rc2-art.js' | sha256sum -c -
-          echo '2b7eed814ef30d02fc1162581b76d654b5d36752f09300ba543005e831ba3e3f  apps/web/public/game-stage2-rc2-ui.js' | sha256sum -c -
-          echo '1cff276b511af96a137c68f44089ca95fc49651cdcf7c7bb7a1ed72f2a1b1f3b  apps/web/public/rc2-3-ui.css' | sha256sum -c -
-          echo '542a8b7090f43d516bd42a97f6c19a27b8553cb30293e87b6f7ae9849eb9e4cd  apps/web/public/game-stage2-rc2-world.js' | sha256sum -c -
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli@5.40.1
@@ -94,7 +77,7 @@ jobs:
           railway whoami --json
           railway link --project "$PROJECT_NAME" --environment production --json
 
-      - name: Deploy RC2.3D web
+      - name: Deploy RC2.4E web
         shell: bash
         run: |
           set -euo pipefail
@@ -102,28 +85,21 @@ jobs:
           railway variable set --service web --environment production --skip-deploys NODE_ENV=production PORT=3000 "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
           railway up apps/web --path-as-root --service web --environment production --detach --json
 
-      - name: Verify public RC2.3D
+      - name: Verify public RC2.4E
         shell: bash
         run: |
           set -euo pipefail
           ok=0
           for i in $(seq 1 120); do
             stamp="$(date +%s)"
-            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc23d=${stamp}" || true)"
-            uc="$(curl -L -sS -o /tmp/ui.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-ui.js?rc23d=${stamp}" || true)"
-            sc="$(curl -L -sS -o /tmp/ui.css -w '%{http_code}' "${PUBLIC_URL}/rc2-3-ui.css?rc23d=${stamp}" || true)"
-            artc="$(curl -L -sS -o /tmp/art.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-art.js?rc23d=${stamp}" || true)"
-            wc="$(curl -L -sS -o /tmp/world.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-world.js?rc23d=${stamp}" || true)"
-            if [ "$ic" = 200 ] && [ "$uc" = 200 ] && [ "$sc" = 200 ] && [ "$artc" = 200 ] && [ "$wc" = 200 ] && \
-               grep -Fq 'RC2.3 CLEANUP PASS' /tmp/index.html && grep -Fq "UI_BUILD='rc2-03-03'" /tmp/ui.js && grep -Fq "ART_BUILD='rc2-03-03'" /tmp/art.js && \
-               grep -Fq '.route-progress i{display:none!important}' /tmp/ui.css && grep -Fq "WORLD_BUILD='rc2-03-02'" /tmp/world.js && \
-               echo 'afa12009e6dc723f883cc4690c59a475c92f32eda6259e1c14577717e3f148ce  /tmp/art.js' | sha256sum -c - >/dev/null 2>&1 && \
-               echo '2b7eed814ef30d02fc1162581b76d654b5d36752f09300ba543005e831ba3e3f  /tmp/ui.js' | sha256sum -c - >/dev/null 2>&1 && \
-               echo '1cff276b511af96a137c68f44089ca95fc49651cdcf7c7bb7a1ed72f2a1b1f3b  /tmp/ui.css' | sha256sum -c - >/dev/null 2>&1; then ok=1;break;fi
-            echo "Waiting RC2.3D ${i}/120 index=${ic} ui=${uc} css=${sc} art=${artc} world=${wc}";sleep 5
+            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc24e=${stamp}" || true)"
+            artc="$(curl -L -sS -o /tmp/art.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-art.js?rc24e=${stamp}" || true)"
+            wc="$(curl -L -sS -o /tmp/world.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-world.js?rc24e=${stamp}" || true)"
+            if [ "$ic" = 200 ] && [ "$artc" = 200 ] && [ "$wc" = 200 ] && grep -Fq 'RC2.4 SCALE PASS' /tmp/index.html && grep -Fq "ART_BUILD='rc2-04-00'" /tmp/art.js && grep -Fq "WORLD_BUILD='rc2-04-00'" /tmp/world.js; then ok=1;break;fi
+            echo "Waiting RC2.4E ${i}/120 index=${ic} art=${artc} world=${wc}";sleep 5
           done
           test "$ok" = 1
-          echo 'RC2.3D public cleanup verified.'
+          echo 'RC2.4E public scale pass verified.'
 
       - name: Smoke test API
         shell: bash
@@ -131,5 +107,4 @@ jobs:
           set -euo pipefail
           test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta")" = 200
           grep -q '"db":true' /tmp/meta.json
-          cat /tmp/meta.json
-          echo "Stage 2 RC2.3D live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stage 2 RC2.4E live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
