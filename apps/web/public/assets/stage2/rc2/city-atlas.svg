@@ -1,0 +1,151 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="768" viewBox="0 0 1024 768">
+  <defs>
+    <linearGradient id="teal" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#69f3e4"/><stop offset="1" stop-color="#1daea6"/></linearGradient>
+    <linearGradient id="steel" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#384d56"/><stop offset="1" stop-color="#15262d"/></linearGradient>
+    <linearGradient id="charme" x1="0" y1="0" x2="1" y2="0"><stop stop-color="#0d0d11"/><stop offset=".52" stop-color="#292934"/><stop offset="1" stop-color="#101115"/></linearGradient>
+    <linearGradient id="water" x1="0" y1="0" x2="0" y2="1"><stop stop-color="#73e9eb" stop-opacity=".9"/><stop offset="1" stop-color="#176c82" stop-opacity=".65"/></linearGradient>
+    <filter id="shadow" x="-30%" y="-30%" width="160%" height="180%"><feGaussianBlur stdDeviation="4"/><feComponentTransfer><feFuncA type="linear" slope=".35"/></feComponentTransfer><feOffset dy="5"/></filter>
+    <filter id="glow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+  </defs>
+
+  <g transform="translate(0 0)" id="platform-park">
+    <ellipse cx="128" cy="166" rx="108" ry="13" fill="#000" opacity=".25" filter="url(#shadow)"/>
+    <path d="M12 88h232v62l-18 24H30l-18-24z" fill="#2d3034" stroke="#091216" stroke-width="6"/>
+    <path d="M18 87h220v18H18z" fill="#70d86f" stroke="#173a24" stroke-width="4"/>
+    <path d="M25 108h206v38H25z" fill="#a46d4d"/>
+    <g stroke="#734831" stroke-width="3" opacity=".7"><path d="M45 108v38M78 108v38M111 108v38M144 108v38M177 108v38M210 108v38"/><path d="M25 127h206"/></g>
+    <path d="M31 149h194l-12 16H43z" fill="#16282d"/>
+    <path d="M24 95h210" stroke="#b5ff9f" stroke-width="2" opacity=".7"/>
+  </g>
+
+  <g transform="translate(256 0)" id="platform-lake">
+    <ellipse cx="128" cy="168" rx="109" ry="13" fill="#000" opacity=".24" filter="url(#shadow)"/>
+    <path d="M12 91h232v59l-18 22H30l-18-22z" fill="url(#steel)" stroke="#07151b" stroke-width="6"/>
+    <path d="M16 88h224v18H16z" fill="#d4edf0" stroke="#3b5963" stroke-width="4"/>
+    <path d="M24 108h208v36H24z" fill="#315c66"/>
+    <path d="M30 116c26 12 48-10 72 0s47-10 74 0 41-8 55 0v20H30z" fill="url(#water)"/>
+    <path d="M32 149h192l-12 15H44z" fill="#0d252e"/>
+    <circle cx="45" cy="98" r="3" fill="#fff"/><circle cx="211" cy="98" r="3" fill="#fff"/>
+  </g>
+
+  <g transform="translate(512 0)" id="platform-city">
+    <ellipse cx="128" cy="168" rx="109" ry="13" fill="#000" opacity=".25" filter="url(#shadow)"/>
+    <path d="M12 89h232v62l-18 22H30l-18-22z" fill="#263036" stroke="#071014" stroke-width="6"/>
+    <path d="M17 88h222v18H17z" fill="#9caab0" stroke="#36474f" stroke-width="4"/>
+    <path d="M24 108h208v38H24z" fill="#49535a"/>
+    <g fill="#5d676d"><rect x="33" y="116" width="48" height="9" rx="3"/><rect x="91" y="116" width="48" height="9" rx="3"/><rect x="149" y="116" width="48" height="9" rx="3"/></g>
+    <path d="M26 134h204" stroke="#f3cf58" stroke-width="5" stroke-dasharray="24 12"/>
+    <path d="M32 149h192l-12 15H44z" fill="#111b20"/>
+  </g>
+
+  <g transform="translate(768 0)" id="platform-charme">
+    <ellipse cx="128" cy="168" rx="110" ry="13" fill="#000" opacity=".28" filter="url(#shadow)"/>
+    <path d="M12 88h232v62l-18 24H30l-18-24z" fill="url(#charme)" stroke="#040508" stroke-width="6"/>
+    <path d="M18 87h220v18H18z" fill="#f2f4f5" stroke="#5b5d63" stroke-width="4"/>
+    <path d="M26 110h204v34H26z" fill="#15171d"/>
+    <path d="M38 134h180" stroke="#69f3e4" stroke-width="4" stroke-dasharray="32 12" filter="url(#glow)"/>
+    <path d="M32 150h192l-12 15H44z" fill="#090b10"/>
+    <path d="M93 119c18-15 39-10 53 1 11 9 22 9 37 8-10 10-30 15-50 10-16-4-29-8-40-19z" fill="none" stroke="#f4f4f5" stroke-width="3"/>
+  </g>
+
+  <g transform="translate(0 192)" id="tree">
+    <ellipse cx="128" cy="171" rx="55" ry="10" fill="#000" opacity=".2"/>
+    <path d="M118 164c6-33 2-74 12-108h14c-4 38-4 72 3 108z" fill="#5f4434" stroke="#2f2c28" stroke-width="5"/>
+    <g fill="#2c8f6d" stroke="#113e35" stroke-width="5"><circle cx="102" cy="75" r="37"/><circle cx="145" cy="63" r="42"/><circle cx="169" cy="94" r="34"/><circle cx="117" cy="108" r="38"/></g>
+    <g fill="#6bd692" opacity=".75"><circle cx="90" cy="67" r="10"/><circle cx="142" cy="48" r="11"/><circle cx="161" cy="82" r="9"/><circle cx="108" cy="100" r="8"/></g>
+  </g>
+
+  <g transform="translate(256 192)" id="bench">
+    <ellipse cx="130" cy="169" rx="88" ry="10" fill="#000" opacity=".2"/>
+    <rect x="45" y="122" width="166" height="15" rx="6" fill="#8b5b43" stroke="#3b2c29" stroke-width="4"/>
+    <rect x="52" y="96" width="152" height="14" rx="6" fill="#a46d4d" stroke="#3b2c29" stroke-width="4"/>
+    <path d="M61 108v50M191 108v50" stroke="#28343a" stroke-width="9"/>
+    <path d="M47 143h164" stroke="#1b252a" stroke-width="8"/>
+    <g transform="translate(95 78)"><rect width="66" height="20" rx="8" fill="#1b3437" stroke="#69f3e4" stroke-width="2"/><circle cx="16" cy="10" r="4" fill="#69f3e4"/><path d="M28 10h28" stroke="#b9fffa" stroke-width="3"/></g>
+  </g>
+
+  <g transform="translate(512 192)" id="busstop">
+    <ellipse cx="129" cy="170" rx="103" ry="10" fill="#000" opacity=".22"/>
+    <path d="M38 155V61h177v94" fill="none" stroke="#2d424c" stroke-width="9"/>
+    <path d="M45 68h163v72H45z" fill="#77dce8" opacity=".19" stroke="#8beaf2" stroke-width="3"/>
+    <path d="M31 60h192l-16-18H49z" fill="#20383f" stroke="#0d1c21" stroke-width="6"/>
+    <rect x="75" y="127" width="93" height="13" rx="6" fill="#64747b"/>
+    <rect x="70" y="82" width="101" height="28" rx="8" fill="#06171c" stroke="#69f3e4" stroke-width="2"/>
+    <text x="120" y="101" text-anchor="middle" fill="#d9fffb" font-family="Arial,sans-serif" font-size="15" font-weight="800">БРОВАРИ</text>
+    <circle cx="195" cy="47" r="16" fill="#69f3e4" stroke="#06171c" stroke-width="5"/><text x="195" y="53" text-anchor="middle" font-family="Arial" font-size="16" font-weight="900" fill="#062226">A</text>
+  </g>
+
+  <g transform="translate(768 192)" id="sign">
+    <ellipse cx="128" cy="171" rx="46" ry="8" fill="#000" opacity=".2"/>
+    <path d="M126 54v112" stroke="#82969e" stroke-width="10"/>
+    <rect x="49" y="58" width="154" height="39" rx="7" fill="#176b74" stroke="#eafdfb" stroke-width="4"/>
+    <text x="126" y="83" text-anchor="middle" fill="#fff" font-family="Arial" font-size="18" font-weight="900">БРОВАРИ →</text>
+    <rect x="70" y="103" width="112" height="32" rx="6" fill="#31434b" stroke="#d6e0e3" stroke-width="3"/>
+    <text x="126" y="124" text-anchor="middle" fill="#fff" font-family="Arial" font-size="14" font-weight="800">КИЇВ  14</text>
+  </g>
+
+  <g transform="translate(0 384)" id="reeds">
+    <ellipse cx="128" cy="162" rx="106" ry="19" fill="url(#water)" opacity=".75"/>
+    <path d="M25 153c34-16 50 14 86-3 35-17 59 12 119-2" fill="none" stroke="#9df7f6" stroke-width="4" opacity=".65"/>
+    <g stroke="#527b3a" stroke-width="4"><path d="M46 158l-4-62M58 159l8-75M72 160l-2-49M187 160l5-70M203 161l-2-53M216 160l8-69"/></g>
+    <g fill="#6f4c2c"><rect x="38" y="94" width="8" height="25" rx="4"/><rect x="62" y="81" width="8" height="27" rx="4"/><rect x="188" y="87" width="8" height="27" rx="4"/><rect x="220" y="88" width="8" height="26" rx="4"/></g>
+    <path d="M101 143c18-14 35-14 54 0-8 5-17 7-27 7s-19-2-27-7z" fill="#dfeef0" opacity=".9"/><circle cx="139" cy="141" r="3" fill="#18272d"/>
+  </g>
+
+  <g transform="translate(256 384)" id="tower">
+    <ellipse cx="128" cy="172" rx="75" ry="9" fill="#000" opacity=".22"/>
+    <path d="M70 163V36h116v127z" fill="#28373e" stroke="#0b151a" stroke-width="6"/>
+    <path d="M82 48h92v103H82z" fill="#344850"/>
+    <g fill="#9be7e9" opacity=".75"><rect x="91" y="57" width="17" height="14"/><rect x="118" y="57" width="17" height="14"/><rect x="145" y="57" width="17" height="14"/><rect x="91" y="82" width="17" height="14"/><rect x="118" y="82" width="17" height="14"/><rect x="145" y="82" width="17" height="14"/><rect x="91" y="107" width="17" height="14"/><rect x="118" y="107" width="17" height="14"/><rect x="145" y="107" width="17" height="14"/></g>
+    <path d="M62 36h132l-17-16H80z" fill="#61e9dc"/>
+    <rect x="108" y="130" width="40" height="33" fill="#14252b"/>
+  </g>
+
+  <g transform="translate(512 384)" id="pylon">
+    <ellipse cx="128" cy="170" rx="76" ry="9" fill="#000" opacity=".25"/>
+    <path d="M55 159l24-92h99l23 92z" fill="#19292f" stroke="#081216" stroke-width="7"/>
+    <path d="M84 77h88l-8 69H92z" fill="#1e6d72" stroke="#69f3e4" stroke-width="3"/>
+    <text x="128" y="105" text-anchor="middle" fill="#fff" font-family="Arial" font-size="20" font-weight="900">БРОВАРИ</text>
+    <text x="128" y="129" text-anchor="middle" fill="#a9fff7" font-family="Arial" font-size="11" font-weight="700">BROVARY UNIVERSE</text>
+    <path d="M116 58l12-18 12 18-12 11z" fill="#f2cf58" stroke="#5a4620" stroke-width="3"/>
+  </g>
+
+  <g transform="translate(768 384)" id="lamp">
+    <ellipse cx="126" cy="172" rx="42" ry="8" fill="#000" opacity=".2"/>
+    <path d="M126 163V55c0-16 15-24 31-24h27" fill="none" stroke="#3b4c54" stroke-width="9"/>
+    <path d="M166 26h42l-7 24h-28z" fill="#24373f" stroke="#08151b" stroke-width="5"/>
+    <path d="M174 48h26l-7 16h-12z" fill="#f8df81" opacity=".9" filter="url(#glow)"/>
+    <rect x="111" y="84" width="30" height="36" rx="7" fill="#15363a" stroke="#69f3e4" stroke-width="2"/><text x="126" y="107" text-anchor="middle" font-family="Arial" font-weight="900" font-size="16" fill="#aafff9">B</text>
+  </g>
+
+  <g transform="translate(0 576)" id="rack">
+    <ellipse cx="128" cy="166" rx="97" ry="9" fill="#000" opacity=".22"/>
+    <path d="M49 154v-39h158v39" fill="none" stroke="#566b74" stroke-width="8"/>
+    <g fill="none" stroke="#69f3e4" stroke-width="5"><circle cx="78" cy="142" r="25"/><circle cx="153" cy="142" r="25"/><path d="M78 142l28-37 30 37H78l18-20h57"/><path d="M106 105h23"/></g>
+    <path d="M190 151l-16-52h20l16 52" fill="none" stroke="#d8e1e4" stroke-width="6"/><circle cx="193" cy="96" r="5" fill="#69f3e4"/>
+  </g>
+
+  <g transform="translate(256 576)" id="fountain">
+    <ellipse cx="128" cy="164" rx="98" ry="15" fill="#183e4b" stroke="#63dce2" stroke-width="4"/>
+    <ellipse cx="128" cy="155" rx="80" ry="11" fill="#4eaeba" opacity=".75"/>
+    <path d="M128 149V76" stroke="#cbdde0" stroke-width="9"/>
+    <path d="M128 79c-28 15-49 37-59 65M128 79c28 15 49 37 59 65M128 94c-18 13-29 27-36 49M128 94c18 13 29 27 36 49" fill="none" stroke="#8ff4f2" stroke-width="4" opacity=".85"/>
+    <circle cx="128" cy="70" r="12" fill="#f1d05e" stroke="#5d4d22" stroke-width="4"/>
+  </g>
+
+  <g transform="translate(512 576)" id="industrial">
+    <ellipse cx="128" cy="170" rx="105" ry="10" fill="#000" opacity=".24"/>
+    <path d="M31 162v-55l37-24v22l35-22v31l39-20v68z" fill="#27373d" stroke="#0a171c" stroke-width="6"/>
+    <path d="M152 162V55h29l8 107zM197 162V82h25l7 80z" fill="#32464e" stroke="#0a171c" stroke-width="6"/>
+    <path d="M160 54V31h13v23M205 81V50h11v31" stroke="#78919a" stroke-width="7"/>
+    <g fill="#f3cc58"><rect x="45" y="124" width="25" height="16"/><rect x="79" y="124" width="25" height="16"/><rect x="113" y="124" width="25" height="16"/></g>
+  </g>
+
+  <g transform="translate(768 576)" id="monument">
+    <ellipse cx="128" cy="171" rx="72" ry="9" fill="#000" opacity=".22"/>
+    <path d="M78 160h100l-10-24H88z" fill="#303e44" stroke="#0a1519" stroke-width="5"/>
+    <path d="M103 136l9-76h32l10 76z" fill="#7c8e95" stroke="#28363c" stroke-width="5"/>
+    <circle cx="128" cy="56" r="27" fill="#153b40" stroke="#69f3e4" stroke-width="4" filter="url(#glow)"/>
+    <path d="M117 42h17c10 0 16 5 16 13 0 5-3 9-7 11 6 2 9 6 9 12 0 9-7 14-19 14h-16zm13 12v7h5c3 0 5-1 5-4s-2-3-5-3zm0 17v8h6c4 0 6-1 6-4s-2-4-6-4z" fill="#e8fffc" transform="translate(-6 -16)"/>
+  </g>
+</svg>
