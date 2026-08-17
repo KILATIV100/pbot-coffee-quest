@@ -6,8 +6,14 @@
   <meta name="theme-color" content="#061015" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <title>P-BOT · Brovary Universe · RC2.1</title>
-  <link rel="stylesheet" href="/styles.css?v=rc2-02-01" />
+  <title>P-BOT · Brovary Universe · RC2.2</title>
+  <link rel="stylesheet" href="/styles.css?v=rc2-02-02" />
+  <style>
+    .route-progress{position:absolute;z-index:4;top:max(60px,calc(env(safe-area-inset-top) + 52px));left:50%;width:min(38vw,360px);height:18px;transform:translateX(-50%);border:1px solid rgba(255,255,255,.12);border-radius:999px;background:rgba(3,14,18,.58);overflow:hidden;pointer-events:none;box-shadow:0 5px 20px rgba(0,0,0,.22)}
+    .route-progress span{position:absolute;inset:0;transform:scaleX(0);transform-origin:left center;background:linear-gradient(90deg,rgba(85,229,216,.45),rgba(105,243,228,.92));transition:transform .12s linear}
+    .route-progress i{position:absolute;inset:0;display:grid;place-items:center;font-style:normal;font-size:10px;font-weight:900;letter-spacing:.06em;color:#eafffd;text-shadow:0 1px 4px #031014}
+    @media(max-height:520px){.route-progress{top:49px;height:14px;width:min(34vw,300px)}.route-progress i{font-size:9px}}
+  </style>
 </head>
 <body>
   <div id="rotatePrompt" aria-hidden="true">
@@ -17,20 +23,21 @@
     <section id="intro" class="intro">
       <div class="intro-copy">
         <div class="eyebrow">P-BOT · BROVARY UNIVERSE</div>
-        <h1>Місто набирає ритм</h1>
-        <p>WORLD 01 · LEVEL 01 · RC2 GAME FEEL PASS</p>
-        <div class="stage-badges"><span>5 CITY SECTORS</span><span>VERTICAL ROUTES</span><span>GAME FEEL 2.1</span><span>SFX LIVE</span></div>
+        <h1>Бровари входять у кадр</h1>
+        <p>WORLD 01 · LEVEL 01 · RC2.2 VISUAL CONTENT PASS</p>
+        <div class="stage-badges"><span>BROVARY SPRITES</span><span>4 PLATFORM SETS</span><span>VISUAL FEEDBACK</span><span>AMBIENT LIVE</span></div>
         <button id="startBtn" disabled>ЗАВАНТАЖЕННЯ АСЕТІВ…</button>
-        <small>01-01 · mobile / desktop · RC2.1</small>
+        <small>01-01 · mobile / desktop · RC2.2</small>
       </div>
     </section>
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="960" height="540" aria-label="P-BOT Brovary Universe RC2.1"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="P-BOT Brovary Universe RC2.2"></canvas>
       <div class="hud">
         <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
-        <div class="world-chip"><b>01-01</b><span>Місто набирає ритм</span></div>
+        <div class="world-chip"><b>01-01</b><span>Бровари входять у кадр</span></div>
         <div class="hud-right"><div class="chip">☕ <b id="beans">0</b></div><div class="chip">✦ <b id="tokens">0</b></div><div class="chip">♥ <b id="lives">3</b></div></div>
       </div>
+      <div class="route-progress" aria-hidden="true"><span id="routeProgressFill"></span><i id="routeProgressLabel">0%</i></div>
       <div id="toast" class="toast"></div>
       <div class="controls" aria-hidden="true">
         <div class="move-controls"><button data-key="left" aria-label="Ліворуч">◀</button><button data-key="right" aria-label="Праворуч">▶</button></div>
@@ -40,6 +47,7 @@
   </main>
   <script src="/config.js"></script>
   <script src="/game-stage2-rc2.js?v=rc2-02-00"></script>
-  <script src="/game-stage2-rc2-polish.js?v=rc2-02-01"></script>
+  <script src="/game-stage2-rc2-polish.js?v=rc2-02-02"></script>
+  <script src="/game-stage2-rc2-visual.js?v=rc2-02-02"></script>
 </body>
 </html>
