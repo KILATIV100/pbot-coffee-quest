@@ -21,19 +21,13 @@
 
   drawPlatform=function(p){
     if(!worldReady||!images.worldPlatforms){
-      const src=CITY[p.skin||'platformCity'];
-      if(images.city&&src){drawCell(images.city,src,p.x,p.y-4,p.w,Math.max(62,p.h+8),{alpha:.96});return;}
+      const seg=112,n=Math.max(1,Math.ceil(p.w/seg));
+      for(let i=0;i<n;i++){const w=Math.min(seg,p.w-i*seg);drawCell(images.props,PROP.barrier,p.x+i*seg,p.y,w,Math.max(58,p.h+18),{alpha:.72});}
       return;
     }
     const src=WP[p.worldSkin||'awning'];
     const dh=clamp(p.w*.625,92,144);
     const topOffset=dh*(24/160);
     drawCell(images.worldPlatforms,src,p.x,p.y-topOffset,p.w,dh,{alpha:.98});
-  };
-
-  // Reduce visual clutter around structures so every platform reads as an object, not a tile strip.
-  const baseWorldProps=drawWorldProps;
-  drawWorldProps=function(){
-    ctx.save();baseWorldProps();ctx.restore();
   };
 })();
