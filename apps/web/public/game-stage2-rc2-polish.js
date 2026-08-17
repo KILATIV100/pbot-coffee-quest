@@ -1,5 +1,6 @@
 (() => {
   let audioCtx=null;
+  let ambienceNext=0;
   let prev={beans:0,tokens:0,lives:3,checkpoint:false,finished:false,on:false,nitro:false,shoes:false};
 
   function ensureAudio(){
@@ -28,12 +29,19 @@
     else if(kind==='checkpoint'){tone(440,.07,'triangle',.026);tone(660,.08,'triangle',.025,.06);tone(880,.12,'sine',.02,.12);}
     else if(kind==='finish'){[392,523,659,784].forEach((f,i)=>tone(f,.18,'triangle',.03,i*.09));}
   }
+  function ambientTick(){
+    if(!audioCtx||mode!=='play'||!player)return;
+    const roots=[110,123.47,146.83,164.81,130.81];
+    const root=roots[Math.max(0,zoneIndex)]||roots[0];
+    tone(root,.72,'sine',.0055);tone(root*1.5,.44,'triangle',.0034,.11);tone(root*2,.26,'sine',.0022,.3);
+  }
   function haptic(pattern){try{navigator.vibrate?.(pattern)}catch{}}
 
   const baseReset=reset;
   reset=function(){
     baseReset();
     props=props.filter(p=>!(p.kind==='checkpoint'&&p.decor));
+    ambienceNext=0;
     prev={beans:player.beans,tokens:player.tokens,lives:player.lives,checkpoint:checkpoint.on,finished:player.finished,on:player.on,nitro:nitroTime>0,shoes:shoesTime>0};
   };
 
@@ -68,6 +76,8 @@
     if(!prev.shoes&&shoesTime>0)sfx('boost');
     if(!beforeOn&&player.on&&Math.abs(beforeVy)>180)sfx('land');
     if(beforeVy>=-120&&player.vy<-420)sfx('jump');
+
+    if(audioCtx&&audioCtx.currentTime>=ambienceNext){ambientTick();ambienceNext=audioCtx.currentTime+3.25;}
 
     prev.beans=player.beans;prev.tokens=player.tokens;prev.lives=player.lives;prev.checkpoint=checkpoint.on;prev.finished=player.finished;prev.on=player.on;prev.nitro=nitroTime>0;prev.shoes=shoesTime>0;
   };
