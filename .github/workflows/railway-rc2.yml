@@ -1,4 +1,4 @@
-name: Railway Stage 2 RC2.4G
+name: Railway Stage 2 RC2.4H
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
           cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex | tr -d '\n\r' | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" > apps/web/public/assets/stage2/p0/actors-p0.webp
           test "$(stat -c%s apps/web/public/assets/stage2/p0/actors-p0.webp)" = 25844
 
-      - name: Validate RC2.4G composition contract
+      - name: Validate RC2.4H mobile and cache contract
         shell: bash
         run: |
           set -euo pipefail
@@ -53,12 +53,13 @@ jobs:
               with Image.open(path) as im: im.load(); assert im.size==size
           PY
           for f in apps/web/public/game-stage2-rc2.js apps/web/public/game-stage2-rc2-polish.js apps/web/public/game-stage2-rc2-visual.js apps/web/public/game-stage2-rc2-ui.js apps/web/public/game-stage2-rc2-art.js apps/web/public/game-stage2-rc2-world.js apps/web/public/game-stage2-rc2-camera.js apps/web/server.js; do node --check "$f"; done
-          grep -Fq 'RC2.4 COMPOSITION PASS' apps/web/public/index.html
+          grep -Fq 'RC2.4 MOBILE POLISH' apps/web/public/index.html
+          grep -Fq 'meta name="build" content="rc2-04-03"' apps/web/public/index.html
+          grep -Fq 'no-store, max-age=0, must-revalidate' apps/web/server.js
+          grep -Fq 'pragma' apps/web/server.js
+          grep -Fq 'radial-gradient(circle' apps/web/public/rc2-3-ui.css
+          grep -Fq 'width:50px;height:50px' apps/web/public/rc2-3-ui.css
           grep -Fq "VISUAL_BUILD='rc2-04-02'" apps/web/public/game-stage2-rc2-visual.js
-          grep -Fq "prop('busstop',1275" apps/web/public/game-stage2-rc2-visual.js
-          grep -Fq "prop('industrial',4550" apps/web/public/game-stage2-rc2-visual.js
-          grep -Fq "prop('sign',5070" apps/web/public/game-stage2-rc2-visual.js
-          ! grep -Fq "prop('sign',3460" apps/web/public/game-stage2-rc2-visual.js
           grep -Fq "CAMERA_BUILD='rc2-04-01'" apps/web/public/game-stage2-rc2-camera.js
           grep -Fq "ART_BUILD='rc2-04-00'" apps/web/public/game-stage2-rc2-art.js
           grep -Fq "WORLD_BUILD='rc2-04-00'" apps/web/public/game-stage2-rc2-world.js
@@ -73,7 +74,7 @@ jobs:
           railway whoami --json
           railway link --project "$PROJECT_NAME" --environment production --json
 
-      - name: Deploy RC2.4G web
+      - name: Deploy RC2.4H web
         shell: bash
         run: |
           set -euo pipefail
@@ -81,20 +82,21 @@ jobs:
           railway variable set --service web --environment production --skip-deploys NODE_ENV=production PORT=3000 "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
           railway up apps/web --path-as-root --service web --environment production --detach --json
 
-      - name: Verify public RC2.4G
+      - name: Verify public RC2.4H
         shell: bash
         run: |
           set -euo pipefail
           ok=0
           for i in $(seq 1 120); do
             stamp="$(date +%s)"
-            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc24g=${stamp}" || true)"
-            vc="$(curl -L -sS -o /tmp/visual.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-visual.js?rc24g=${stamp}" || true)"
-            if [ "$ic" = 200 ] && [ "$vc" = 200 ] && grep -Fq 'RC2.4 COMPOSITION PASS' /tmp/index.html && grep -Fq "VISUAL_BUILD='rc2-04-02'" /tmp/visual.js; then ok=1;break;fi
-            echo "Waiting RC2.4G ${i}/120 index=${ic} visual=${vc}";sleep 5
+            headers="$(mktemp)"
+            ic="$(curl -L -sS -D "$headers" -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc24h=${stamp}" || true)"
+            sc="$(curl -L -sS -o /tmp/ui.css -w '%{http_code}' "${PUBLIC_URL}/rc2-3-ui.css?rc24h=${stamp}" || true)"
+            if [ "$ic" = 200 ] && [ "$sc" = 200 ] && grep -Fq 'RC2.4 MOBILE POLISH' /tmp/index.html && grep -Fqi 'cache-control: no-store' "$headers" && grep -Fq 'radial-gradient(circle' /tmp/ui.css; then ok=1;break;fi
+            echo "Waiting RC2.4H ${i}/120 index=${ic} css=${sc}";sleep 5
           done
           test "$ok" = 1
-          echo 'RC2.4G public composition pass verified.'
+          echo 'RC2.4H public mobile/cache pass verified.'
 
       - name: Smoke test API
         shell: bash
@@ -102,4 +104,4 @@ jobs:
           set -euo pipefail
           test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta")" = 200
           grep -q '"db":true' /tmp/meta.json
-          echo "Stage 2 RC2.4G live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stage 2 RC2.4H live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
