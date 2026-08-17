@@ -1,4 +1,4 @@
-name: Railway Stage 2 RC2
+name: Railway Stage 2 RC2.2
 
 on:
   push:
@@ -50,13 +50,15 @@ jobs:
           test "$(stat -c%s apps/web/public/assets/stage2/p0/actors-p0.webp)" = 25844
           echo '3b3c8e1d986849e83feb1f22815d1b00143c29012d833a6c5a0fbf04677015e2  apps/web/public/assets/stage2/p0/actors-p0.webp' | sha256sum -c -
 
-      - name: Validate RC2 visual and gameplay contract
+      - name: Validate RC2.2 visual content contract
         shell: bash
         run: |
           set -euo pipefail
           python3 -m pip install --quiet pillow
           python3 - <<'PY'
           from PIL import Image
+          from pathlib import Path
+          import xml.etree.ElementTree as ET
           tests=[
             ('apps/web/public/assets/stage2/rc1/bg-loop.webp',(1440,480),False),
             ('apps/web/public/assets/stage2/rc1/pbot-atlas.webp',(560,280),True),
@@ -68,24 +70,35 @@ jobs:
               im.load(); assert im.format=='WEBP'; assert im.size==size,(path,im.size,size)
               if alpha: assert im.convert('RGBA').getchannel('A').getextrema()==(0,255),path
               print(path,im.size,im.mode)
+          svg=Path('apps/web/public/assets/stage2/rc2/city-atlas.svg')
+          root=ET.parse(svg).getroot()
+          assert root.attrib.get('width')=='1024' and root.attrib.get('height')=='768'
+          ids={el.attrib.get('id') for el in root.iter() if el.attrib.get('id')}
+          required={'platform-park','platform-lake','platform-city','platform-charme','tree','bench','busstop','sign','reeds','tower','pylon','lamp','rack','fountain','industrial','monument'}
+          assert required <= ids,(required-ids)
+          print('RC2.2 city atlas OK',svg.stat().st_size,sorted(required))
           PY
           node --check apps/web/public/game-stage2-rc2.js
+          node --check apps/web/public/game-stage2-rc2-polish.js
+          node --check apps/web/public/game-stage2-rc2-visual.js
           node --check apps/web/server.js
           grep -q 'game-stage2-rc2.js' apps/web/public/index.html
+          grep -q 'game-stage2-rc2-polish.js' apps/web/public/index.html
+          grep -q 'game-stage2-rc2-visual.js' apps/web/public/index.html
+          grep -q 'RC2.2 VISUAL CONTENT PASS' apps/web/public/index.html
+          grep -q 'routeProgressFill' apps/web/public/index.html
           grep -q "BUILD='rc2-02-00'" apps/web/public/game-stage2-rc2.js
-          grep -q 'WORLD=6200' apps/web/public/game-stage2-rc2.js
-          grep -q 'const ZONES=' apps/web/public/game-stage2-rc2.js
-          grep -q 'platforms=\[' apps/web/public/game-stage2-rc2.js
-          grep -q 'function drawPlatform' apps/web/public/game-stage2-rc2.js
-          grep -q 'function spawnBurst' apps/web/public/game-stage2-rc2.js
-          grep -q 'targetY=clamp' apps/web/public/game-stage2-rc2.js
-          grep -q 'look=clamp(player.vx' apps/web/public/game-stage2-rc2.js
-          grep -q 'updateEnemies' apps/web/public/game-stage2-rc2.js
-          grep -q 'RC2 GAME FEEL PASS' apps/web/public/index.html
+          grep -q "VISUAL_BUILD='rc2-02-02'" apps/web/public/game-stage2-rc2-visual.js
+          grep -q 'platformSkinFor' apps/web/public/game-stage2-rc2-visual.js
+          grep -q 'CITY_PATH' apps/web/public/game-stage2-rc2-visual.js
+          grep -q 'ambientTick' apps/web/public/game-stage2-rc2-polish.js
+          grep -q 'ЦЕНТР БРОВАРІВ' apps/web/public/game-stage2-rc2-visual.js
+          test "$(stat -c%s apps/web/public/assets/stage2/rc2/city-atlas.svg)" = 11983
+          grep -q 'id="platform-park"' apps/web/public/assets/stage2/rc2/city-atlas.svg
+          grep -q 'БРОВАРИ' apps/web/public/assets/stage2/rc2/city-atlas.svg
+          echo '069eea33c56f58ebb0b5c1139cfadf08ba6f86594fc83f521dc6727c2d881080  apps/web/public/game-stage2-rc2-visual.js' | sha256sum -c -
+          echo 'a493bcd3c3396df97023c65ef574074f99f5793729649937870293a595043f3c  apps/web/public/game-stage2-rc2-polish.js' | sha256sum -c -
           ! grep -q 'game-stage2-rc1.js' apps/web/public/index.html
-          ! grep -q 'drawStore(' apps/web/public/game-stage2-rc2.js
-          ! grep -q 'drawTree(' apps/web/public/game-stage2-rc2.js
-          ! grep -q 'drawBusStop(' apps/web/public/game-stage2-rc2.js
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli@5.40.1
@@ -97,7 +110,7 @@ jobs:
           railway whoami --json
           railway link --project "$PROJECT_NAME" --environment production --json
 
-      - name: Deploy RC2 web
+      - name: Deploy RC2.2 web
         shell: bash
         run: |
           set -euo pipefail
@@ -107,31 +120,37 @@ jobs:
             "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
           railway up apps/web --path-as-root --service web --environment production --detach --json
 
-      - name: Verify public RC2
+      - name: Verify public RC2.2
         shell: bash
         run: |
           set -euo pipefail
           ok=0
           for i in $(seq 1 120); do
             stamp="$(date +%s)"
-            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc2=${stamp}" || true)"
-            jc="$(curl -L -sS -o /tmp/game.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2.js?rc2=${stamp}" || true)"
-            bc="$(curl -L -sS -o /tmp/bg.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/bg-loop.webp?rc2=${stamp}" || true)"
-            pc="$(curl -L -sS -o /tmp/pbot.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/pbot-atlas.webp?rc2=${stamp}" || true)"
-            ac="$(curl -L -sS -o /tmp/props.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/props-atlas.webp?rc2=${stamp}" || true)"
-            if [ "$ic" = 200 ] && [ "$jc" = 200 ] && [ "$bc" = 200 ] && [ "$pc" = 200 ] && [ "$ac" = 200 ] && \
-               grep -q 'game-stage2-rc2.js' /tmp/index.html && grep -q "BUILD='rc2-02-00'" /tmp/game.js && \
-               [ "$(stat -c%s /tmp/bg.webp)" = 64932 ] && [ "$(stat -c%s /tmp/pbot.webp)" = 35350 ] && [ "$(stat -c%s /tmp/props.webp)" = 71838 ] && \
+            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc22=${stamp}" || true)"
+            jc="$(curl -L -sS -o /tmp/game.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2.js?rc22=${stamp}" || true)"
+            pc="$(curl -L -sS -o /tmp/polish.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-polish.js?rc22=${stamp}" || true)"
+            vc="$(curl -L -sS -o /tmp/visual.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-visual.js?rc22=${stamp}" || true)"
+            cc="$(curl -L -sS -o /tmp/city.svg -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc2/city-atlas.svg?rc22=${stamp}" || true)"
+            bc="$(curl -L -sS -o /tmp/bg.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/bg-loop.webp?rc22=${stamp}" || true)"
+            pbc="$(curl -L -sS -o /tmp/pbot.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/pbot-atlas.webp?rc22=${stamp}" || true)"
+            ac="$(curl -L -sS -o /tmp/props.webp -w '%{http_code}' "${PUBLIC_URL}/assets/stage2/rc1/props-atlas.webp?rc22=${stamp}" || true)"
+            if [ "$ic" = 200 ] && [ "$jc" = 200 ] && [ "$pc" = 200 ] && [ "$vc" = 200 ] && [ "$cc" = 200 ] && [ "$bc" = 200 ] && [ "$pbc" = 200 ] && [ "$ac" = 200 ] && \
+               grep -q 'RC2.2 VISUAL CONTENT PASS' /tmp/index.html && grep -q 'game-stage2-rc2-visual.js' /tmp/index.html && \
+               grep -q "VISUAL_BUILD='rc2-02-02'" /tmp/visual.js && grep -q 'ambientTick' /tmp/polish.js && \
+               [ "$(stat -c%s /tmp/city.svg)" = 11983 ] && grep -q 'id="platform-park"' /tmp/city.svg && grep -q 'БРОВАРИ' /tmp/city.svg && \
+               echo '069eea33c56f58ebb0b5c1139cfadf08ba6f86594fc83f521dc6727c2d881080  /tmp/visual.js' | sha256sum -c - >/dev/null 2>&1 && \
+               echo 'a493bcd3c3396df97023c65ef574074f99f5793729649937870293a595043f3c  /tmp/polish.js' | sha256sum -c - >/dev/null 2>&1 && \
                echo '78c25f46ccc459e54a0345b6010526ccdca78191eaf84b29809add559c7c1a52  /tmp/bg.webp' | sha256sum -c - >/dev/null 2>&1 && \
                echo 'ffea22b9f88714b630db6a0c4b6a4a55279be829518715629d76d5d87c1cad3c  /tmp/pbot.webp' | sha256sum -c - >/dev/null 2>&1 && \
                echo '11b91d1f1ba4d4cea59e3a34698a867783d6c47953712970961fe6cd3ff485ed  /tmp/props.webp' | sha256sum -c - >/dev/null 2>&1; then
               ok=1; break
             fi
-            echo "Waiting RC2 ${i}/120 index=${ic} js=${jc} bg=${bc} pbot=${pc} props=${ac}"
+            echo "Waiting RC2.2 ${i}/120 index=${ic} core=${jc} polish=${pc} visual=${vc} city=${cc}"
             sleep 5
           done
           test "$ok" = 1
-          echo 'RC2 public runtime and exact sprite assets verified.'
+          echo 'RC2.2 public visual runtime and sprite assets verified.'
 
       - name: Smoke test API
         shell: bash
@@ -140,4 +159,4 @@ jobs:
           test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta")" = 200
           grep -q '"db":true' /tmp/meta.json
           cat /tmp/meta.json
-          echo "Stage 2 RC2 live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stage 2 RC2.2 live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
