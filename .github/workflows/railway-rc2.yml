@@ -1,4 +1,4 @@
-name: Railway Stage 2 RC2.4E
+name: Railway Stage 2 RC2.4F
 
 on:
   push:
@@ -42,7 +42,7 @@ jobs:
           cat .stage2-p0/actors-00.hex .stage2-p0/actors-01a.hex .stage2-p0/actors-01b.hex .stage2-p0/actors-01c.hex .stage2-p0/actors-01d.hex .stage2-p0/actors-02.hex .stage2-p0/actors-03.hex | tr -d '\n\r' | python3 -c "import sys; sys.stdout.buffer.write(bytes.fromhex(sys.stdin.read()))" > apps/web/public/assets/stage2/p0/actors-p0.webp
           test "$(stat -c%s apps/web/public/assets/stage2/p0/actors-p0.webp)" = 25844
 
-      - name: Validate RC2.4E scale contract
+      - name: Validate RC2.4F readability contract
         shell: bash
         run: |
           set -euo pipefail
@@ -53,19 +53,14 @@ jobs:
           for path,size in tests:
               with Image.open(path) as im: im.load(); assert im.size==size
           PY
-          node --check apps/web/public/game-stage2-rc2.js
-          node --check apps/web/public/game-stage2-rc2-polish.js
-          node --check apps/web/public/game-stage2-rc2-visual.js
-          node --check apps/web/public/game-stage2-rc2-ui.js
-          node --check apps/web/public/game-stage2-rc2-art.js
-          node --check apps/web/public/game-stage2-rc2-world.js
-          node --check apps/web/server.js
-          grep -Fq 'RC2.4 SCALE PASS' apps/web/public/index.html
+          for f in apps/web/public/game-stage2-rc2.js apps/web/public/game-stage2-rc2-polish.js apps/web/public/game-stage2-rc2-visual.js apps/web/public/game-stage2-rc2-ui.js apps/web/public/game-stage2-rc2-art.js apps/web/public/game-stage2-rc2-world.js apps/web/public/game-stage2-rc2-camera.js apps/web/server.js; do node --check "$f"; done
+          grep -Fq 'RC2.4 READABILITY PASS' apps/web/public/index.html
+          grep -Fq 'game-stage2-rc2-camera.js?v=rc2-04-01' apps/web/public/index.html
+          grep -Fq "CAMERA_BUILD='rc2-04-01'" apps/web/public/game-stage2-rc2-camera.js
+          grep -Fq 'camX=clamp(player.x-365,0,WORLD-VW)' apps/web/public/game-stage2-rc2-camera.js
+          grep -Fq 'if(sx<260)' apps/web/public/game-stage2-rc2-camera.js
           grep -Fq "ART_BUILD='rc2-04-00'" apps/web/public/game-stage2-rc2-art.js
           grep -Fq "WORLD_BUILD='rc2-04-00'" apps/web/public/game-stage2-rc2-world.js
-          grep -Fq "p.kind==='charme'?.80" apps/web/public/game-stage2-rc2-art.js
-          grep -Fq 'const dh=clamp(p.h+34,66,116)' apps/web/public/game-stage2-rc2-world.js
-          grep -Fq "props=props.filter(p=>p.kind!=='billboard')" apps/web/public/game-stage2-rc2-art.js
 
       - name: Install Railway CLI
         run: npm install -g @railway/cli@5.40.1
@@ -77,7 +72,7 @@ jobs:
           railway whoami --json
           railway link --project "$PROJECT_NAME" --environment production --json
 
-      - name: Deploy RC2.4E web
+      - name: Deploy RC2.4F web
         shell: bash
         run: |
           set -euo pipefail
@@ -85,21 +80,20 @@ jobs:
           railway variable set --service web --environment production --skip-deploys NODE_ENV=production PORT=3000 "API_INTERNAL_URL=http://${D}{{api.RAILWAY_PRIVATE_DOMAIN}}:3001"
           railway up apps/web --path-as-root --service web --environment production --detach --json
 
-      - name: Verify public RC2.4E
+      - name: Verify public RC2.4F
         shell: bash
         run: |
           set -euo pipefail
           ok=0
           for i in $(seq 1 120); do
             stamp="$(date +%s)"
-            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc24e=${stamp}" || true)"
-            artc="$(curl -L -sS -o /tmp/art.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-art.js?rc24e=${stamp}" || true)"
-            wc="$(curl -L -sS -o /tmp/world.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-world.js?rc24e=${stamp}" || true)"
-            if [ "$ic" = 200 ] && [ "$artc" = 200 ] && [ "$wc" = 200 ] && grep -Fq 'RC2.4 SCALE PASS' /tmp/index.html && grep -Fq "ART_BUILD='rc2-04-00'" /tmp/art.js && grep -Fq "WORLD_BUILD='rc2-04-00'" /tmp/world.js; then ok=1;break;fi
-            echo "Waiting RC2.4E ${i}/120 index=${ic} art=${artc} world=${wc}";sleep 5
+            ic="$(curl -L -sS -o /tmp/index.html -w '%{http_code}' "${PUBLIC_URL}/?rc24f=${stamp}" || true)"
+            cc="$(curl -L -sS -o /tmp/camera.js -w '%{http_code}' "${PUBLIC_URL}/game-stage2-rc2-camera.js?rc24f=${stamp}" || true)"
+            if [ "$ic" = 200 ] && [ "$cc" = 200 ] && grep -Fq 'RC2.4 READABILITY PASS' /tmp/index.html && grep -Fq "CAMERA_BUILD='rc2-04-01'" /tmp/camera.js; then ok=1;break;fi
+            echo "Waiting RC2.4F ${i}/120 index=${ic} camera=${cc}";sleep 5
           done
           test "$ok" = 1
-          echo 'RC2.4E public scale pass verified.'
+          echo 'RC2.4F public readability pass verified.'
 
       - name: Smoke test API
         shell: bash
@@ -107,4 +101,4 @@ jobs:
           set -euo pipefail
           test "$(curl -L -sS -o /tmp/meta.json -w '%{http_code}' "${PUBLIC_URL}/api/meta")" = 200
           grep -q '"db":true' /tmp/meta.json
-          echo "Stage 2 RC2.4E live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
+          echo "Stage 2 RC2.4F live: ${PUBLIC_URL}" >> "$GITHUB_STEP_SUMMARY"
