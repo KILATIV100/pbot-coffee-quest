@@ -1,14 +1,13 @@
 (() => {
-  const ART_BUILD='rc2-03-01';
+  const ART_BUILD='rc2-03-03';
 
   const baseReset=reset;
   reset=function(){
     baseReset();
-    // Keep local humour, but stop repeating the same billboard every few screens.
-    props=props.filter(p=>p.kind!=='billboard'||p.x<700||p.x>5000);
+    // Legacy meme billboards compete with gameplay and repeat the same message.
+    props=props.filter(p=>p.kind!=='billboard');
     for(const p of props){
       const bottom=p.y+p.dh;
-      if(p.kind==='billboard'){p.dw*=.82;p.dh*=.82;p.y=bottom-p.dh;}
       if(p.kind==='perkup'||p.kind==='charme'){p.dw*=.94;p.dh*=.94;p.y=bottom-p.dh;}
     }
   };
@@ -27,19 +26,14 @@
   };
 
   const baseWorld=drawWorldProps;
-  drawWorldProps=function(){
-    ctx.save();ctx.filter='saturate(.88) contrast(.98)';baseWorld();ctx.restore();
-  };
+  drawWorldProps=function(){ctx.save();ctx.filter='saturate(.88) contrast(.98)';baseWorld();ctx.restore();};
 
   const basePlayer=drawPlayer;
   drawPlayer=function(){
     if(!player)return basePlayer();
     const c=view(),ax=player.x+player.w/2-c.x,ay=player.y+player.h-c.y;
-    ctx.save();
-    ctx.translate(ax,ay);ctx.scale(1.12,1.12);ctx.translate(-ax,-ay);
-    ctx.filter='drop-shadow(0 2px 1px rgba(2,10,14,.45))';
-    basePlayer();
-    ctx.restore();
+    ctx.save();ctx.translate(ax,ay);ctx.scale(1.12,1.12);ctx.translate(-ax,-ay);
+    ctx.filter='drop-shadow(0 2px 1px rgba(2,10,14,.45))';basePlayer();ctx.restore();
   };
 
   drawPerky=function(){
@@ -51,6 +45,5 @@
 
   const baseEnemies=drawEnemies;
   drawEnemies=function(){ctx.save();ctx.filter='saturate(.92) contrast(1.04)';baseEnemies();ctx.restore();};
-
   document.documentElement.dataset.artBuild=ART_BUILD;
 })();
