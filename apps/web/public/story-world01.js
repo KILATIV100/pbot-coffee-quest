@@ -138,7 +138,7 @@
     }
     if(q.phase===3)for(const shard of Q.SHARDS){if(q.shards.includes(shard.id))continue;c.save();c.translate(shard.x,shard.y+Math.sin(t*3)*2);c.rotate(.08*Math.sin(t*2));c.fillStyle='#ecfbff';c.strokeStyle='#22aac6';c.lineWidth=2;c.beginPath();c.roundRect(-11,-14,22,28,4);c.fill();c.stroke();c.fillStyle='#208aa6';for(let j=0;j<3;j++)c.fillRect(-6,-7+j*6,12,2);c.restore();}
     if(q.phase===5&&!q.parcel){const im=window.PBOT_WORLD01.art.crate;c.save();c.drawImage(im,Q.PARCEL.x-18,Q.PARCEL.y-19,36,36);c.strokeStyle='#ffe288';c.lineWidth=2;c.strokeRect(Q.PARCEL.x-20,Q.PARCEL.y-21,40,40);c.font='700 11px system-ui';c.textAlign='center';c.fillStyle='#062535';c.fillText('CHARME',Q.PARCEL.x,Q.PARCEL.y-27);c.restore();}
-    if(q.phase>=7){c.save();c.strokeStyle='#62f3de';c.lineWidth=3;for(let j=0;j<3;j++){c.globalAlpha=.55-j*.12;c.beginPath();c.ellipse(3238,437-j*10,36+j*5,10,0,Math.PI*2);c.stroke();}c.restore();}
+    if(q.phase>=7){c.save();c.strokeStyle='#62f3de';c.lineWidth=3;for(let j=0;j<3;j++){c.globalAlpha=.55-j*.12;c.beginPath();c.ellipse(3238,437-j*10,36+j*5,10,0,0,Math.PI*2);c.stroke();}c.restore();}
   }
   function keydown(e){
     if(!s||s.L.id!=='01-01'||s.finished)return;const mode=api.getMode();

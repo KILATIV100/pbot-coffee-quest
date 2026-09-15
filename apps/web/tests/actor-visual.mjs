@@ -13,7 +13,7 @@ const result=await p.evaluate(()=>{
   const p={x:baseX+60,y:baseY+103,w:40,h:74,standH:74,facing:j%2?-1:1,animState:state,animTime:t,inv:state==='hurt'?.15:0};
   PBOT_ACTORS.render(x,p,key);x.strokeStyle='#69cfa9';x.lineWidth=1;x.beginPath();x.moveTo(baseX+6,baseY+178);x.lineTo(baseX+154,baseY+178);x.stroke();
   const temp=document.createElement('canvas');temp.width=160;temp.height=220;const q=temp.getContext('2d');PBOT_ACTORS.render(q,{...p,x:60,y:103},key);const data=q.getImageData(0,0,160,220).data;let pixels=0,edge=0;
-  for(let y=0;y<220;y++)for(let xx=0;xx<160;xx++)if(data[(y*160+xx)*4+3]>200){pixels++;if(xx===0||xx===159||y===0||y===219)edge++;}
+  for(let y=0;y<220;y++)for(let xx=0;xx<160;xx++)if(data[(y*160+xx)*4+3]>32){pixels++;if(xx===0||xx===159||y===0||y===219)edge++;}
   bounds.push({key,state,pixels,edge});
  }));return {png:c.toDataURL('image/png').split(',')[1],bounds};
 });

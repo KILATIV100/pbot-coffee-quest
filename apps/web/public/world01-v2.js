@@ -92,7 +92,7 @@
     }
     // Midground foliage is grounded in the same city plane as the shops.
     for(let x=20;x<s.L.length;x+=420){if(x+360<cam||x>cam+W)continue;if(s.gaps.some(g=>x+310>g.x&&x<g.x+g.w))continue;image(c,'flower-strip',x,431,35);}
-    for(const d of props){if(d[1]+440<cam||d[1]>cam+W+50)continue;if(d[0]==='checkpoint')continue;image(c,...d);}
+    for(const d of props){if(d[1]+440<cam||d[1]>cam+W+50)continue;if(d[0]==='checkpoint')continue;if(d[0]==='portal'&&s.quest?.phase<7)image(c,...d,{alpha:.42});else image(c,...d);}
     // Bridge surface matches the collision deck, with piers below the pavement.
     // Source railing/lamps begin 88px above the walkable deck.
     c.drawImage(art.bridge,1578,320,355,219);

@@ -15,6 +15,14 @@
   const add=n=>{if(n>=0&&n<w*h&&!seen[n]&&candidate(n)){seen[n]=1;queue[tail++]=n;}};
   for(let x=0;x<w;x++){add(x);add((h-1)*w+x)}for(let y=0;y<h;y++){add(y*w);add(y*w+w-1)}
   while(head<tail){const n=queue[head++],x=n%w,y=Math.floor(n/w);if(x)add(n-1);if(x<w-1)add(n+1);if(y)add(n-w);if(y<h-1)add(n+w);}
+  // Remove disconnected matte fragments before measuring the shared foot anchor.
+  const foreground=new Uint8Array(w*h);
+  for(let start=0;start<w*h;start++){
+    if(seen[start]||foreground[start])continue;head=0;tail=0;queue[tail++]=start;foreground[start]=1;
+    const push=n=>{if(!seen[n]&&!foreground[n]){foreground[n]=1;queue[tail++]=n;}};
+    while(head<tail){const n=queue[head++],xx=n%w,yy=Math.floor(n/w);if(xx)push(n-1);if(xx<w-1)push(n+1);if(yy)push(n-w);if(yy<h-1)push(n+w);}
+    if(tail<24)for(let j=0;j<tail;j++)seen[queue[j]]=1;
+  }
   let bottom=0;
   for(let n=0;n<w*h;n++){if(seen[n])d[n*4+3]=0;else bottom=Math.max(bottom,Math.floor(n/w)+1);}
   ctx.putImageData(img,0,0);return {c,bottom};
@@ -26,15 +34,17 @@
   const result=[normalize(base,103,541,.34)];
   for(let n=0;n<8;n++){const c=cv(600,650),cx=c.getContext('2d'),phase=n*Math.PI/4;cx.translate(197,30+Math.cos(phase*2)*4);
    const part=(key,x,y,a)=>{cx.save();cx.translate(x,y);cx.rotate(a);cx.drawImage(parts[key],-x,-y);cx.restore();};
-   part('legL',72,314,Math.sin(phase)*.18);part('legR',133,314,-Math.sin(phase)*.18);part('armL',43,168,-Math.sin(phase)*.16);part('body',103,316,0);part('armR',169,167,Math.sin(phase)*.16);
+   part('legL',72,314,Math.sin(phase)*.24);part('legR',133,314,-Math.sin(phase)*.24);part('armL',43,168,-Math.sin(phase)*.23);part('body',103,316,0);part('armR',169,167,Math.sin(phase)*.23);
    const px=cx.getImageData(0,0,600,650).data;let bottom=0;for(let y=649;y>=0&&!bottom;y--)for(let x=0;x<600;x++)if(px[(y*600+x)*4+3]>180){bottom=y+1;break;}
    result.push(normalize(c,300,bottom,.34));
   }
-  result.push(normalize(bent,bent.width/2,bent.height,.37));return result;
+  result.push(normalize(bent,bent.width/2,bent.height,.34));return result;
  }
  const loading=Promise.all([load('/assets/characters/pbot/sheet.webp'),load('/assets/world01-v2/hero.webp'),load('/assets/world01-v2/hero-jump.webp')]).then(([pbot,hero,bent])=>{
   const edges=[0,96,190,285,380,474,568,665,760],heads=[53,147,244,339,434,530,623,714];frames.pbot=[];
-  for(let n=0;n<8;n++){const {c,bottom}=cleanRobot(pbot,edges[n],edges[n+1]);frames.pbot.push(normalize(c,heads[n]-edges[n],bottom,1.21));}
+  for(let n=0;n<8;n++){const {c,bottom}=cleanRobot(pbot,edges[n],edges[n+1]);let pose=c;
+  if(n===6){pose=cv(c.width,c.height);const z=pose.getContext('2d'),split=113,shift=Math.max(0,bottom-split)*.45;z.drawImage(c,0,0,c.width,split,0,shift,c.width,split);z.drawImage(c,0,split,c.width,bottom-split,0,split+shift,c.width,bottom-split-shift);}
+  frames.pbot.push(normalize(pose,heads[n]-edges[n],bottom,1.21));}
   frames.hero=humanFrames(hero,bent);
   // The old Vitalii image was an erased duplicate of this same black-clothes
   // character. Restore that design; do not assign a different NPC's identity.
