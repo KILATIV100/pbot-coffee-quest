@@ -92,7 +92,7 @@
     }
     // Midground foliage is grounded in the same city plane as the shops.
     for(let x=20;x<s.L.length;x+=420){if(x+360<cam||x>cam+W)continue;if(s.gaps.some(g=>x+310>g.x&&x<g.x+g.w))continue;image(c,'flower-strip',x,431,35);}
-    for(const d of props){if(d[1]+440<cam||d[1]>cam+W+50)continue;if(d[0]==='checkpoint')continue;image(c,...d);}
+    for(const d of props){if(d[1]+440<cam||d[1]>cam+W+50)continue;if(d[0]==='checkpoint')continue;if(d[0]==='portal'&&s.quest?.phase<7)image(c,...d,{alpha:.42});else image(c,...d);}
     // Bridge surface matches the collision deck, with piers below the pavement.
     // Source railing/lamps begin 88px above the walkable deck.
     c.drawImage(art.bridge,1578,320,355,219);
@@ -103,27 +103,18 @@
     for(const b of s.beans){if(b.taken||b.x<cam-40||b.x>cam+W+40)continue;let y=b.y+Math.sin(t*3+b.x*.03)*2;image(c,'bean',b.x-9,y+11,23);}
     for(const q of s.tokens){if(q.taken)continue;let y=q.y+Math.sin(t*2)*4;c.save();c.translate(q.x,y);c.scale(.8+Math.abs(Math.cos(t*2))*.2,1);image(c,'coin',-15,16,33);c.restore();}
     for(const e of s.enemies){if(e.dead||e.x<cam-100||e.x>cam+W+100)continue;const h=e.kind==='drone'?51:e.kind==='scooter'?60:72;const y=e.y+e.h+(e.kind==='drone'?Math.sin(t*4)*3:0);if(e.kind!=='drone')shadow(c,e.x+e.w/2,449,e.w*.45);image(c,e.kind,e.x-9,y,h,{flip:e.v<0});}
+    window.PBOT_STORY?.render(c,s);
     // Foot anchor is shared by idle, run, crouch and jump.
     const foot=p.y+p.h;
     if(p.onGround)shadow(c,p.x+p.w/2,foot+2,22,.2);
-    c.save();if(p.inv>0&&Math.floor(p.inv*10)%2)c.globalAlpha=.4;
-    if(save.selected==='pbot'&&images.pbot?.naturalWidth){
-      const poses={idle:[0,0],run1:[140,0],run2:[280,0],run3:[420,0],run4:[0,140],run5:[140,140],crouch:[280,140],jump:[420,140]};
-      const key=p.crouching?'crouch':!p.onGround?'jump':Math.abs(p.vx)>20?'run'+(Math.floor(t*11)%5+1):'idle';
-      const [sx,sy]=poses[key],size=119;c.translate(p.x+p.w/2,foot);if(p.facing<0)c.scale(-1,1);c.drawImage(images.pbot,sx,sy,140,140,-size/2,-132*size/140,size,size);
-    }else{
-      const im=save.selected==='vitalii'?images.vitalii:art[p.crouching||!p.onGround?'hero-jump':'hero'];
-      if(im?.naturalWidth){const h=p.crouching?64:91,w=h*im.naturalWidth/im.naturalHeight;c.translate(p.x+p.w/2,foot);if(p.facing<0)c.scale(-1,1);c.rotate(p.onGround?Math.sin(t*12)*Math.min(.022,Math.abs(p.vx)*.0001):-.07);c.drawImage(im,-w/2,-h,w,h);}
-    }
-    c.restore();
+    window.PBOT_ACTORS.render(c,p,save.selected);
     const helperX=p.x-48,helperY=p.y-7+Math.sin(t*3)*4;image(c,'perky',helperX,helperY,45,{flip:p.facing<0});
     if(p.pulse>4.5-Math.min(2.4,save.upgrades.pulse*.45)){
       const elapsed=(5-Math.min(2.4,save.upgrades.pulse*.45))-p.pulse;c.strokeStyle=`rgba(78,230,226,${Math.max(0,1-elapsed*2)})`;c.lineWidth=3;c.beginPath();c.arc(p.x+p.w/2,p.y+p.h/2,Math.max(0,elapsed)*330,0,Math.PI*2);c.stroke();
     }
     for(const q of s.particles){c.globalAlpha=Math.max(0,q.life/q.max);c.fillStyle=q.color;c.beginPath();c.arc(q.x,q.y,q.r*.8,0,Math.PI*2);c.fill();}c.globalAlpha=1;
     c.restore();
-    // Brief helper, not a permanent box covering the playfield.
-    if(s.time<6&&p.x<240){c.save();rr(c,24,75,295,63,12);c.fillStyle='rgba(8,32,44,.84)';c.fill();image(c,'perky',35,129,43);c.fillStyle='#72eddf';c.font='700 11px system-ui';c.fillText('PERKY',77,95);c.fillStyle='#fff';c.font='12px system-ui';c.fillText('Збирай зерна. Досліджуй місто.',77,113);c.fillText('Стрибни двічі, щоб дістатися вище.',77,129);c.restore();}
+
   }
   window.PBOT_WORLD01={get ready(){return ready},loading,build,render,art};
 })();

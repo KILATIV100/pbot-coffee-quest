@@ -6,28 +6,29 @@
   <meta name="theme-color" content="#061015" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="build" content="world01-art-20260915-2" />
+  <meta name="build" content="world01-story-20260915-3" />
   <title>P-BOT · Brovary Universe</title>
-  <link rel="stylesheet" href="/styles.css?v=world01-art-20260915-2" />
-  <link rel="stylesheet" href="/release-polish.css?v=world01-art-20260915-2" />
-<link rel="stylesheet" href="/world01-v2.css?v=world01-art-20260915-2">
+  <link rel="stylesheet" href="/styles.css?v=world01-story-20260915-3" />
+  <link rel="stylesheet" href="/release-polish.css?v=world01-story-20260915-3" />
+<link rel="stylesheet" href="/world01-v2.css?v=world01-story-20260915-3">
 <link rel="icon" type="image/webp" href="/assets/world01-v2/pbot-idle.webp">
+  <link rel="stylesheet" href="/story-world01.css?v=world01-story-20260915-3">
 </head>
 <body>
   <div id="rotatePrompt" aria-hidden="true"><div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT працює горизонтально · 16:9</span></div></div>
   <main id="app">
     <section id="menuScreen" class="menu-screen">
       <header class="menu-top">
-        <div><div class="eyebrow">P-BOT · BROVARY UNIVERSE</div><h1>МІСТО<br>ПРОКИДАЄТЬСЯ</h1><p>Світ 01 · Розвилка</p><button id="playFirst" class="primary">ГРАТИ · 01-01</button><small class="build-label">WORLD 01 · ART REVIEW 02</small></div>
+        <div><div class="eyebrow">P-BOT · BROVARY UNIVERSE</div><h1>МІСТО<br>ПРОКИДАЄТЬСЯ</h1><p>Світ 01 · Розвилка</p><button id="playFirst" class="primary">ГРАТИ · 01-01</button><small class="build-label">WORLD 01 · STORY & ACTORS 03</small></div>
         <div class="bank"><span>☕ <b id="bankBeans">0</b></span><span>✦ <b id="bankTokens">0</b></span><span>Кампанія <b id="campaign">1/45</b></span></div>
       </header>
       <div class="menu-layout">
         <aside class="side-panel">
           <h2>Герой</h2>
           <div class="character-grid">
-            <button data-character="pbot" class="character selected"><span>🤖</span><b>P-BOT</b><small>баланс</small></button>
-            <button data-character="hero" class="character"><span>🧑🏻</span><b>Brovary Hero</b><small>ритм</small></button>
-            <button data-character="vitalii" class="character"><span>🕶️</span><b>Vitalii</b><small>контроль</small></button>
+            <button data-character="pbot" class="character selected"><span><img src="/assets/world01-v2/pbot-idle.webp" alt=""></span><b>P-BOT</b><small>баланс</small></button>
+            <button data-character="hero" class="character"><span><img src="/assets/world01-v2/hero.webp" alt=""></span><b>Brovary Hero</b><small>ритм</small></button>
+            <button data-character="vitalii" class="character"><span><img src="/assets/world01-v2/hero.webp" alt=""></span><b>Vitalii</b><small>контроль</small></button>
           </div>
           <h2>Прокачка</h2>
           <div class="upgrade-list">
@@ -60,8 +61,11 @@
     <section id="completeScreen" class="modal hidden"><div class="modal-card"><div class="eyebrow">P-BOT · BROVARY UNIVERSE</div><h2 id="completeTitle">РІВЕНЬ ПРОЙДЕНО</h2><p id="completeMeta"></p><div id="completeStars" class="stars">★★★</div><strong id="completeStats"></strong><div class="modal-actions"><button id="nextBtn" class="primary">НАСТУПНИЙ РІВЕНЬ</button><button id="mapBtn" class="ghost">КАРТА СВІТІВ</button></div></div></section>
   </main>
   <script src="/config.js"></script>
-  <script src="/world01-v2.js?v=world01-art-20260915-2"></script>
-  <script src="/final-game.js?v=world01-art-20260915-2"></script>
-  <script src="/release-polish.js?v=world01-art-20260915-2"></script>
+  <script src="/actors-v3.js?v=world01-story-20260915-3"></script>
+  <script src="/story-core.js?v=world01-story-20260915-3"></script>
+  <script src="/story-world01.js?v=world01-story-20260915-3"></script>
+  <script src="/world01-v2.js?v=world01-story-20260915-3"></script>
+  <script src="/final-game.js?v=world01-story-20260915-3"></script>
+  <script src="/release-polish.js?v=world01-story-20260915-3"></script>
 </body>
 </html>

@@ -1,0 +1,44 @@
+name: World 01 story and actors QA
+on:
+  push:
+    branches: [fix/story-actors-world01]
+    paths: ['apps/web/**', '.github/workflows/story-world01-qa.yml']
+  pull_request:
+    paths: ['apps/web/**', '.github/workflows/story-world01-qa.yml']
+permissions:
+  contents: read
+concurrency:
+  group: story-qa-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Syntax and reducer tests
+        run: |
+          for f in apps/web/public/actors-v3.js apps/web/public/story-core.js apps/web/public/story-world01.js apps/web/public/final-game.js apps/web/public/world01-v2.js; do node --check "$f"; done
+          node --test apps/web/tests/story-core.test.mjs
+      - name: Browser dependencies
+        working-directory: apps/web
+        run: |
+          npm install --no-save playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Real browser quest and sprite checks
+        run: |
+          PORT=3100 node apps/web/server.js > /tmp/pbot-story-server.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:3100/health && break || sleep 1; done
+          QA_OUT=qa-story node apps/web/tests/actor-visual.mjs
+          QA_OUT=qa-story node apps/web/tests/story-browser.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: world01-story-actors-qa
+          path: qa-story/
+          retention-days: 7
