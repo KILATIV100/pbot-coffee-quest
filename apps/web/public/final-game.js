@@ -41,28 +41,33 @@ const hud={beans:$('#beans'),tokens:$('#tokens'),lives:$('#lives'),world:$('#wor
 function rand(seed){let t=seed+0x6D2B79F5;return()=>{t=Math.imul(t^t>>>15,t|1);t^=t+Math.imul(t^t>>>7,t|61);return((t^t>>>14)>>>0)/4294967296}}
 function toast(msg){const t=$('#toast');t.textContent=msg;t.classList.add('on');clearTimeout(toast._t);toast._t=setTimeout(()=>t.classList.remove('on'),1800)}
 
-function buildLevel(i){const L=LEVELS[i],r=rand(i*991+17),plats=[{x:0,y:448,w:L.length,h:120}],haz=[],beans=[],tokens=[],enemies=[],checkpoints=[];
- for(let x=520;x<L.length-500;x+=320+r()*170){if(r()<.34){const gap=90+r()*95;haz.push({x,y:448,w:gap,h:92,type:'pit'});plats.push({x:x+gap,y:448,w:180+r()*160,h:120})}if(r()<.58)plats.push({x:x+70,y:330-r()*80,w:120+r()*100,h:24});}
- for(let x=220;x<L.length-240;x+=120+r()*80)beans.push({x,y:390-r()*130,taken:false});
- for(let n=0;n<L.tokens;n++)tokens.push({x:(n+1)*L.length/(L.tokens+1),y:250-r()*90,taken:false});
- for(let x=900;x<L.length-600;x+=680+r()*300)enemies.push({x,y:410,w:42,h:38,v:(r()<.5?-1:1)*(35+L.wi*2),hp:1+(L.wi>8?1:0),dead:false,kind:r()<.33?'drone':'spam'});
- [0.33,0.66].forEach(p=>checkpoints.push({x:L.length*p,hit:false}));
- return {L,plats,haz,beans,tokens,enemies,checkpoints};}
-function startLevel(i){levelIndex=i;const data=buildLevel(i),L=data.L;state={...data,time:0,camera:0,scoreBeans:0,scoreTokens:0,lives:3,finished:false,deadTimer:0,player:{x:90,y:360,w:36,h:54,vx:0,vy:0,onGround:false,jumps:0,inv:0,cpX:90,pulse:0},boss:L.boss?{x:L.length-420,y:330,w:150,h:118,hp:8,max:8,phase:0,cool:2}:null};mode='play';$('#menuScreen').classList.add('hidden');$('#gameShell').classList.remove('hidden');updateHud();toast(`${L.id} · ${L.world} · ${L.name}`)}
+function buildLevel(i){
+ const L=LEVELS[i],r=rand(i*991+17),plats=[],haz=[],beans=[],tokens=[],enemies=[],checkpoints=[],gaps=[];
+ for(let x=620;x<L.length-620;x+=360+r()*190){if(r()<.38){const w=90+r()*85;gaps.push({x,w});haz.push({x,y:448,w,h:92,type:'pit'})}if(r()<.63)plats.push({x:x+50,y:320-r()*85,w:120+r()*100,h:24});}
+ gaps.sort((a,b)=>a.x-b.x);let cursor=0;for(const g of gaps){if(g.x-cursor>50)plats.push({x:cursor,y:448,w:g.x-cursor,h:120});cursor=g.x+g.w;}if(L.length-cursor>0)plats.push({x:cursor,y:448,w:L.length-cursor,h:120});
+ const safeX=x=>{for(const g of gaps){if(x>g.x-45&&x<g.x+g.w+45)return Math.min(L.length-160,g.x+g.w+70)}return x};
+ for(let n=0;n<L.beans;n++){const x=safeX(220+(L.length-460)*(n/Math.max(1,L.beans-1)));const arc=(n%9===4||n%9===5)?70:0;beans.push({x,y:390-arc-r()*25,taken:false});}
+ for(let n=0;n<L.tokens;n++)tokens.push({x:safeX((n+1)*L.length/(L.tokens+1)),y:245-r()*55,taken:false});
+ for(let x=900;x<L.length-650;x+=720+r()*290)enemies.push({x:safeX(x),y:410,w:42,h:38,v:(r()<.5?-1:1)*(35+L.wi*2),hp:1+(L.wi>8?1:0),dead:false,kind:r()<.33?'drone':'spam'});
+ [0.33,0.66].forEach(p=>checkpoints.push({x:safeX(L.length*p),hit:false}));
+ return {L,plats,haz,beans,tokens,enemies,checkpoints,gaps};
+}
+function startLevel(i){levelIndex=i;const data=buildLevel(i),L=data.L;state={...data,time:0,camera:0,scoreBeans:0,scoreTokens:0,lives:3,finished:false,deadTimer:0,player:{x:90,y:360,w:36,h:54,vx:0,vy:0,onGround:false,jumps:0,inv:0,cpX:90,pulse:0,coyote:0,jumpBuffer:0},boss:L.boss?{x:L.length-420,y:330,w:150,h:118,hp:8,max:8,phase:0,cool:2}:null};mode='play';$('#menuScreen').classList.add('hidden');$('#gameShell').classList.remove('hidden');updateHud();toast(`${L.id} · ${L.world} · ${L.name}`)}
 
 function updateHud(){if(!state)return;const L=state.L;hud.beans.textContent=`${state.scoreBeans}/${L.beans}`;hud.tokens.textContent=state.scoreTokens;hud.lives.textContent=state.lives;hud.world.textContent=L.world;hud.level.textContent=L.id;const p=Math.min(1,state.player.x/L.length);hud.progress.style.width=(p*100)+'%';hud.label.textContent=Math.round(p*100)+'%'}
 function rect(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
 function groundCollision(p){p.onGround=false;for(const q of state.plats){if(p.vy>=0&&p.x+p.w>q.x&&p.x<q.x+q.w&&p.y+p.h<=q.y+18&&p.y+p.h+p.vy/60>=q.y){p.y=q.y-p.h;p.vy=0;p.onGround=true;p.jumps=0}}}
 function kill(){const p=state.player;if(p.inv>0||state.deadTimer>0)return;state.lives--;updateHud();if(state.lives<=0){state.lives=3;p.cpX=90;toast('Спроба перезапущена')}state.deadTimer=.65;p.inv=1.8}
-function respawn(){const p=state.player;p.x=p.cpX;p.y=330;p.vx=0;p.vy=0;state.deadTimer=0}
+function respawn(){const p=state.player;p.x=p.cpX;p.y=330;p.vx=0;p.vy=0;p.coyote=0;state.deadTimer=0}
 function finish(){if(state.finished)return;state.finished=true;const L=state.L;let stars=1;if(state.scoreBeans>=L.beans)stars++;if(state.lives===3)stars++;save.unlocked=Math.max(save.unlocked,Math.min(45,levelIndex+2));save.stars[L.id]=Math.max(save.stars[L.id]||0,stars);save.best[L.id]=Math.min(save.best[L.id]||Infinity,state.time);save.beans+=state.scoreBeans;save.tokens+=state.scoreTokens;persist();setTimeout(()=>showComplete(stars),500)}
 function showComplete(stars){mode='complete';$('#completeTitle').textContent=state.L.boss?'BROVARY ЗВІЛЬНЕНО':'РІВЕНЬ ПРОЙДЕНО';$('#completeMeta').textContent=`${state.L.id} · ${state.L.world} · ${state.L.name}`;$('#completeStars').textContent='★'.repeat(stars)+'☆'.repeat(3-stars);$('#completeStats').textContent=`☕ ${state.scoreBeans} · ✦ ${state.scoreTokens} · ${state.time.toFixed(1)} c`;$('#completeScreen').classList.remove('hidden')}
 
 function update(dt){if(mode!=='play'||!state||state.finished)return;state.time+=dt;const p=state.player,L=state.L;if(p.inv>0)p.inv-=dt;if(state.deadTimer>0){state.deadTimer-=dt;if(state.deadTimer<=0)respawn();return}
  const speed=215+save.upgrades.speed*18;const accel=1600;p.vx+=(input.right-input.left)*accel*dt;p.vx*=Math.pow(.0015,dt);p.vx=Math.max(-speed,Math.min(speed,p.vx));if(input.down&&p.onGround)p.vx*=.75;
- if(input.jumpPressed){if(p.onGround||p.jumps<2){p.vy=-(430+save.upgrades.jump*18);p.onGround=false;p.jumps++;}}input.jumpPressed=false;
+ if(input.jumpPressed)p.jumpBuffer=.12;input.jumpPressed=false;p.jumpBuffer=Math.max(0,p.jumpBuffer-dt);p.coyote=p.onGround?.1:Math.max(0,p.coyote-dt);
+ if(p.jumpBuffer>0&&(p.onGround||p.coyote>0||p.jumps<2)){p.vy=-(430+save.upgrades.jump*18);p.onGround=false;p.coyote=0;p.jumps=Math.max(1,p.jumps+1);p.jumpBuffer=0;}
+ if(!input.jump&&p.vy<0)p.vy+=700*dt;
  p.vy+=1080*dt;p.x+=p.vx*dt;p.x=Math.max(0,Math.min(L.length-p.w,p.x));p.y+=p.vy*dt;groundCollision(p);if(p.y>H+120)kill();
- for(const h of state.haz){if(rect(p,{x:h.x,y:h.y,w:h.w,h:h.h}))kill()}
  for(const b of state.beans){if(!b.taken&&Math.hypot(p.x-b.x,p.y-b.y)<54){b.taken=true;state.scoreBeans++}}
  for(const t of state.tokens){if(!t.taken&&Math.hypot(p.x-t.x,p.y-t.y)<60){t.taken=true;state.scoreTokens++;toast('Brovary Token +1')}}
  for(const c of state.checkpoints){if(!c.hit&&p.x>c.x){c.hit=true;p.cpX=c.x;toast('Чекпойнт активовано')}}
