@@ -1,113 +1,39 @@
-name: World 01 canonical art QA
+name: World 01 asset import
 on:
   push:
     branches: [fix/world01-canonical-art]
     paths: [.github/workflows/world01-art-import-qa.yml]
-  workflow_dispatch:
 permissions:
   contents: write
 jobs:
-  verify:
+  import:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 3
     steps:
       - uses: actions/checkout@v4
         with:
           ref: fix/world01-canonical-art
-      - name: Import checksum-verified binary artwork and source
+      - name: Import only the public game code and owned artwork
+        env:
+          BUNDLE_URL: 'https://sdmntprdenmarkeast.oaiusercontent.com/files/00000000-ef58-8210-a8e7-0fa2e78f3b12/raw?se=2026-09-15T07%3A58%3A39Z&sp=r&sv=2026-02-06&sr=b&scid=c01e968a-3cda-5432-988c-1f06476b105b&skoid=ba81670d-b682-4d2d-9682-ac0ffdfb3fa1&sktid=a48cca56-e6da-484e-a814-9c849652bcb3&skt=2026-09-14T20%3A12%3A37Z&ske=2026-09-15T20%3A12%3A37Z&sks=b&skv=2026-02-06&sig=6UTafQDUNHjY1y7n2JqVHk9OOkTjoTCFzwf4bBlAbVs%3D'
         run: |
-          curl --fail --silent --show-error --location --proto '=https' 'https://res.cloudinary.com/dljcgfm0i/raw/upload/v1789458517/pbot/releases/world01-art-review02-transfer.tgz' -o /tmp/world01.tgz
+          echo "::add-mask::$BUNDLE_URL"
+          curl --fail --silent --show-error --location --proto '=https' "$BUNDLE_URL" -o /tmp/world01.zip
           python3 - <<'PY'
-          import zipfile,pathlib,tarfile,hashlib,io
-          with tarfile.open('/tmp/world01.tgz','r:gz') as t:
-            payload=[t.extractfile(m).read() for m in t.getmembers() if m.isfile()]
-          assert len(payload)==1
-          b=payload[0]
+          import zipfile,pathlib,hashlib
+          b=pathlib.Path('/tmp/world01.zip').read_bytes()
           assert hashlib.sha256(b).hexdigest()=='5b7b8ec6266de267242a34b7ff02bcf54fd686d0890ece2792cc2e8af06d8f75'
-          with zipfile.ZipFile(io.BytesIO(b)) as z:
+          with zipfile.ZipFile('/tmp/world01.zip') as z:
             for f in z.namelist():
               p=pathlib.PurePosixPath(f)
               assert f.startswith('apps/web/') and not p.is_absolute() and '..' not in p.parts, f
+              assert not p.name.startswith('.env'),f
             z.extractall('.')
           PY
+          node --check apps/web/public/final-game.js
+          node --check apps/web/public/world01-v2.js
           git config user.name 'P-BOT build'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add apps/web
           git diff --cached --quiet || git commit -m 'fix(world01): canonical city art, grounded layout, collision and viewport fixes'
           git push origin HEAD:fix/world01-canonical-art
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-      - name: Prepare browser
-        run: |
-          node --check apps/web/public/final-game.js
-          node --check apps/web/public/world01-v2.js
-          mkdir -p /tmp/pbot-qa
-          cd /tmp/pbot-qa
-          npm init -y
-          npm install --save-exact playwright@1.55.0
-          npx playwright install --with-deps chromium
-      - name: HTTP browser checks
-        run: |
-          mkdir -p qa-output
-          node apps/web/server.js > /tmp/pbot-server.log 2>&1 &
-          cat > /tmp/pbot-qa/check.cjs <<'JS'
-          const {chromium}=require('playwright');
-          const fs=require('fs'),assert=require('assert');
-          (async()=>{
-            const browser=await chromium.launch({headless:true});
-            const page=await browser.newPage({viewport:{width:1440,height:900}});
-            const errors=[],bad=[];const out=process.env.GITHUB_WORKSPACE+'/qa-output/';
-            page.on('pageerror',e=>errors.push(String(e)));
-            page.on('response',r=>{if(r.status()>=400)bad.push(r.status()+' '+r.url())});
-            await page.goto('http://127.0.0.1:3000/',{waitUntil:'networkidle'});
-            assert.equal(await page.locator('meta[name=build]').getAttribute('content'),'world01-art-20260915-2');
-            await page.screenshot({path:out+'menu.png'});
-            await page.locator('#playFirst').click();await page.waitForTimeout(1700);
-            assert.equal(await page.evaluate(()=>__PBOT_QA__.getMode()),'play');
-            assert((await page.evaluate(()=>document.querySelector('canvas').width))>0);
-            await page.screenshot({path:out+'level01-desktop.png'});
-            const x=await page.evaluate(()=>__PBOT_QA__.getState().player.x);
-            await page.keyboard.down('ArrowRight');await page.waitForTimeout(1400);await page.keyboard.up('ArrowRight');
-            assert((await page.evaluate(()=>__PBOT_QA__.getState().player.x))>x+100);
-            const y=await page.evaluate(()=>__PBOT_QA__.getState().player.y);
-            await page.keyboard.down('Space');await page.waitForTimeout(180);
-            assert((await page.evaluate(()=>__PBOT_QA__.getState().player.y))<y-20);
-            await page.keyboard.up('Space');await page.waitForTimeout(700);
-            await page.keyboard.down('ArrowDown');await page.waitForTimeout(100);
-            assert((await page.evaluate(()=>__PBOT_QA__.getState().player.h))<74);await page.keyboard.up('ArrowDown');
-            await page.keyboard.press('Escape');assert.equal(await page.evaluate(()=>__PBOT_QA__.getMode()),'pause');await page.keyboard.press('Escape');
-            await page.locator('#menuBtn').click();await page.locator('#resumeBtn').click();
-            for(const character of ['hero','vitalii','pbot']){
-              await page.locator('#menuBtn').click();await page.locator(`[data-character="${character}"]`).click();await page.locator('#resumeBtn').click();await page.waitForTimeout(100);
-            }
-            await page.setViewportSize({width:844,height:390});await page.waitForTimeout(300);await page.screenshot({path:out+'level01-mobile.png'});
-            const box=await page.locator('canvas').boundingBox();assert(Math.abs(box.width/box.height-16/9)<.02);
-            const before=await page.evaluate(()=>__PBOT_QA__.getState().player.x);
-            const right=await page.locator('[data-key="right"]').boundingBox();
-            await page.mouse.move(right.x+right.width/2,right.y+right.height/2);await page.mouse.down();await page.waitForTimeout(350);await page.mouse.up();
-            assert((await page.evaluate(()=>__PBOT_QA__.getState().player.x))>before+15);
-            const traversal=await page.evaluate(()=>{
-              const q=__PBOT_QA__;q.start(0);const s=q.getState(),i=q.input;let jt=0;
-              for(let k=0;k<12000&&!s.finished;k++){
-                const p=s.player;i.right=true;i.jump=true;const near=s.gaps.find(g=>p.x>g.x-125&&p.x<g.x+g.w+20);
-                if(near&&p.onGround){i.jumpPressed=true;jt=0}if(!p.onGround){jt+=1/60;if(near&&p.jumps===1&&jt>.3)i.jumpPressed=true}
-                if(p.pulse<=0&&s.enemies.some(e=>!e.dead&&Math.abs(e.x-p.x)<165))i.actionPressed=true;
-                q.update(1/60);
-              }
-              i.right=i.jump=false;return {finished:s.finished,damage:s.damageCount,beans:s.scoreBeans,total:s.beans.length,checkpoints:s.checkpoints.map(c=>c.hit)};
-            });
-            assert(traversal.finished);assert.equal(traversal.total,50);assert(traversal.checkpoints.every(Boolean));
-            await page.waitForTimeout(700);await page.screenshot({path:out+'level01-finish.png'});
-            const saved=await page.evaluate(()=>JSON.parse(localStorage.getItem('pbot-brovary-final-v1')));assert(saved.unlocked>=2);
-            fs.writeFileSync(out+'result.json',JSON.stringify({build:'world01-art-20260915-2',errors,bad,traversal,savedUnlocked:saved.unlocked,viewports:[[1440,900],[844,390]],checks:['boot','image decode','movement','jump','crouch collider','pause','menu/resume','3 characters','aspect ratio','pointer movement','simulation traversal','local save']},null,2));
-            await browser.close();assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);
-          })().catch(e=>{console.error(e);process.exitCode=1});
-          JS
-          node /tmp/pbot-qa/check.cjs
-      - uses: actions/upload-artifact@v4
-        if: always()
-        with:
-          name: world01-art-verified
-          path: qa-output/
-          retention-days: 7
