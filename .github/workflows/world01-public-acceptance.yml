@@ -1,0 +1,84 @@
+name: World 01 public acceptance
+on:
+  push:
+    branches: [release/final-brovary-universe]
+    paths: [.github/workflows/world01-public-acceptance.yml]
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Prepare browser
+        run: |
+          mkdir -p /tmp/pbot-public
+          cd /tmp/pbot-public
+          npm init -y
+          npm install --save-exact playwright@1.55.0
+          npx playwright install --with-deps chromium
+      - name: Verify served build, checksums and screenshots
+        run: |
+          mkdir -p public-evidence
+          cat > /tmp/pbot-public/probe.cjs <<'JS'
+          const {chromium}=require('playwright'),fs=require('fs'),assert=require('assert'),{createHash}=require('crypto');
+          const BASE='https://web-production-f3e45.up.railway.app',BUILD='world01-art-20260915-2';
+          const out=process.env.GITHUB_WORKSPACE+'/public-evidence/';
+          const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+          (async()=>{
+            let health;
+            for(let n=0;n<40;n++){
+              try{const r=await fetch(BASE+'/health?verify='+Date.now(),{signal:AbortSignal.timeout(12000)});health=await r.json();if(health.build===BUILD)break;}catch(e){}
+              await sleep(4000);
+            }
+            fs.writeFileSync(out+'health.json',JSON.stringify(health||{},null,2));
+            assert.equal(health?.build,BUILD,'Public site still serves the old uploaded snapshot');
+            const hashes={};
+            for(const [p,expected] of Object.entries({
+              '/final-game.js':'b56eb24ce00ae9dd98d304d96c202e7f6b6f2d1428792079bd6cea8d4ee9308f',
+              '/world01-v2.js':'6836db4a683ad3b41645e13a0b2333dc9a80d1cbc4601042fde6b3a0abbc2466',
+              '/assets/world01-v2/city.webp':'b44b34c796f4721e6a575305cf431554baa5dc7896b504ea7baa950b3beaeb0d'
+            })){
+              const r=await fetch(BASE+p+'?verify='+Date.now());assert.equal(r.status,200);
+              hashes[p]=createHash('sha256').update(Buffer.from(await r.arrayBuffer())).digest('hex');assert.equal(hashes[p],expected);
+            }
+            const browser=await chromium.launch({headless:true});
+            const page=await browser.newPage({viewport:{width:1440,height:900}});const errors=[],bad=[];
+            page.on('pageerror',e=>errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)bad.push(r.status()+' '+r.url())});
+            try {
+              await page.goto(BASE+'/?review='+BUILD,{waitUntil:'networkidle'});
+              assert.equal(await page.locator('meta[name=build]').getAttribute('content'),BUILD);
+              await page.screenshot({path:out+'public-menu.png'});
+              await page.locator('#playFirst').click();await page.waitForTimeout(2100);
+              assert(await page.locator('#gameShell').isVisible());
+              assert(await page.evaluate(()=>PBOT_WORLD01.ready&&Object.values(PBOT_WORLD01.art).every(im=>im.naturalWidth>0)));
+              await page.screenshot({path:out+'public-level01-desktop.png'});
+              const firstBeans=await page.locator('#beans').innerText();
+              await page.keyboard.down('ArrowRight');await page.waitForTimeout(1800);await page.keyboard.up('ArrowRight');
+              const movedBeans=await page.locator('#beans').innerText();assert.notEqual(firstBeans,movedBeans);
+              await page.keyboard.down('Space');await page.waitForTimeout(170);await page.screenshot({path:out+'public-level01-jump.png'});await page.keyboard.up('Space');
+              await page.waitForTimeout(650);await page.locator('#audioBtn').click();
+              assert.equal(await page.evaluate(()=>localStorage.getItem('pbot-muted')),'1');
+              await page.locator('#menuBtn').click();assert(await page.locator('#menuScreen').isVisible());
+              await page.locator('#resumeBtn').click();assert(await page.locator('#gameShell').isVisible());
+              await page.setViewportSize({width:844,height:390});await page.waitForTimeout(300);
+              const box=await page.locator('canvas').boundingBox();assert(Math.abs(box.width/box.height-16/9)<.02);
+              await page.screenshot({path:out+'public-level01-mobile.png'});
+              fs.writeFileSync(out+'result.json',JSON.stringify({build:BUILD,url:page.url(),title:await page.title(),health,hashes,errors,bad,firstBeans,movedBeans,viewports:[[1440,900],[844,390]],passed:['live build identity','exact runtime and asset bytes','all loaded images decode','first-level boot','keyboard movement and pickup','jump','audio mute state','menu/resume','16:9 mobile layout','screenshots']},null,2));
+              assert.deepEqual(errors,[]);assert.deepEqual(bad,[]);
+            } finally {
+              fs.writeFileSync(out+'console.json',JSON.stringify({errors,bad},null,2));await page.screenshot({path:out+'public-last-state.png'}).catch(()=>{});await browser.close();
+            }
+          })().catch(e=>{console.error(e);process.exitCode=1});
+          JS
+          node /tmp/pbot-public/probe.cjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: world01-public-acceptance
+          path: public-evidence/
+          retention-days: 7
