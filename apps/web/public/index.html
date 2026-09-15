@@ -3,53 +3,60 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover" />
-  <meta http-equiv="Cache-Control" content="no-store, no-cache, must-revalidate" />
-  <meta http-equiv="Pragma" content="no-cache" />
   <meta name="theme-color" content="#061015" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-  <meta name="build" content="rc2-04-03" />
-  <title>P-BOT · Brovary Universe · RC2.4H</title>
-  <link rel="stylesheet" href="/styles.css?v=rc2-04-03" />
-  <link rel="stylesheet" href="/rc2-3-ui.css?v=rc2-04-03" />
+  <meta name="build" content="final-1.0" />
+  <title>P-BOT · Brovary Universe</title>
+  <link rel="stylesheet" href="/styles.css?v=final-1.0" />
 </head>
 <body>
-  <div id="rotatePrompt" aria-hidden="true">
-    <div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT працює горизонтально · 16:9</span></div>
-  </div>
+  <div id="rotatePrompt" aria-hidden="true"><div class="rotate-card"><div class="rotate-icon">↻</div><b>Поверніть телефон</b><span>P-BOT працює горизонтально · 16:9</span></div></div>
   <main id="app">
-    <section id="intro" class="intro">
-      <div class="intro-copy">
-        <div class="eyebrow">P-BOT · BROVARY UNIVERSE</div>
-        <h1>Менше шуму. Більше гри.</h1>
-        <p>WORLD 01 · LEVEL 01 · RC2.4 MOBILE POLISH</p>
-        <div class="stage-badges"><span>NO STALE UI</span><span>LIGHT CONTROLS</span><span>CURATED SECTORS</span><span>SAFE CAMERA</span></div>
-        <button id="startBtn" disabled>ЗАВАНТАЖЕННЯ АСЕТІВ…</button>
-        <small>01-01 · mobile / desktop · RC2.4H</small>
+    <section id="menuScreen" class="menu-screen">
+      <header class="menu-top">
+        <div><div class="eyebrow">P-BOT · BROVARY UNIVERSE</div><h1>БРОВАРИ. 15 СВІТІВ. 45 РІВНІВ.</h1><p>Міський платформер про Бровари — від Розвилки до Future Brovary Core.</p></div>
+        <div class="bank"><span>☕ <b id="bankBeans">0</b></span><span>✦ <b id="bankTokens">0</b></span><span>Кампанія <b id="campaign">1/45</b></span></div>
+      </header>
+      <div class="menu-layout">
+        <aside class="side-panel">
+          <h2>Герой</h2>
+          <div class="character-grid">
+            <button data-character="pbot" class="character selected"><span>🤖</span><b>P-BOT</b><small>баланс</small></button>
+            <button data-character="hero" class="character"><span>🧑🏻</span><b>Brovary Hero</b><small>ритм</small></button>
+            <button data-character="vitalii" class="character"><span>🕶️</span><b>Vitalii</b><small>контроль</small></button>
+          </div>
+          <h2>Прокачка</h2>
+          <div class="upgrade-list">
+            <button data-upgrade="speed"><span>⚡</span><b>Швидкість</b><small>5+ ✦</small></button>
+            <button data-upgrade="jump"><span>↟</span><b>Стрибок</b><small>5+ ✦</small></button>
+            <button data-upgrade="pulse"><span>◎</span><b>Perky Pulse</b><small>5+ ✦</small></button>
+          </div>
+          <button id="resumeBtn" class="primary hidden">ПРОДОВЖИТИ РІВЕНЬ</button>
+          <button id="resetBtn" class="ghost">Скинути прогрес</button>
+        </aside>
+        <section class="campaign-panel"><div class="campaign-head"><div><h2>Карта кампанії</h2><p>Три рівні в кожному світі. Зірки: фініш / всі зерна / без втрати життя.</p></div><div class="legend"><span>☕ зерна</span><span>✦ Brovary Token</span><span>◎ Perky Pulse</span></div></div><div id="levelGrid" class="level-grid"></div></section>
       </div>
     </section>
+
     <section id="gameShell" class="game-shell hidden">
-      <canvas id="game" width="960" height="540" aria-label="P-BOT Brovary Universe RC2.4H"></canvas>
+      <canvas id="game" width="960" height="540" aria-label="P-BOT Brovary Universe"></canvas>
       <div class="hud">
         <button id="menuBtn" class="hud-round" aria-label="Меню">☰</button>
-        <div class="world-chip"><b>01-01</b><span>Бровари</span></div>
-        <div class="hud-right"><div class="chip">☕ <b id="beans">0</b></div><div class="chip">✦ <b id="tokens">0</b></div><div class="chip">♥ <b id="lives">3</b></div></div>
+        <div class="world-chip"><b id="levelCode">01-01</b><span id="worldName">Розвилка</span></div>
+        <div class="hud-right"><div class="chip">☕ <b id="beans">0/50</b></div><div class="chip">✦ <b id="tokens">0</b></div><div class="chip">♥ <b id="lives">3</b></div></div>
       </div>
-      <div class="route-progress" aria-hidden="true"><span id="routeProgressFill"></span><i id="routeProgressLabel"></i></div>
+      <div class="route-progress" aria-hidden="true"><span id="routeProgressFill"></span><i id="routeProgressLabel">0%</i></div>
       <div id="toast" class="toast"></div>
-      <div class="controls" aria-hidden="true">
+      <div class="controls">
         <div class="move-controls"><button data-key="left" aria-label="Ліворуч">◀</button><button data-key="right" aria-label="Праворуч">▶</button></div>
         <div class="action-controls"><button data-key="action" class="small ability" aria-label="Perky Pulse">◎</button><button data-key="down" class="small" aria-label="Присісти">▼</button><button data-key="jump" class="jump" aria-label="Стрибок">▲</button></div>
       </div>
     </section>
+
+    <section id="completeScreen" class="modal hidden"><div class="modal-card"><div class="eyebrow">P-BOT · BROVARY UNIVERSE</div><h2 id="completeTitle">РІВЕНЬ ПРОЙДЕНО</h2><p id="completeMeta"></p><div id="completeStars" class="stars">★★★</div><strong id="completeStats"></strong><div class="modal-actions"><button id="nextBtn" class="primary">НАСТУПНИЙ РІВЕНЬ</button><button id="mapBtn" class="ghost">КАРТА СВІТІВ</button></div></div></section>
   </main>
   <script src="/config.js"></script>
-  <script src="/game-stage2-rc2.js?v=rc2-04-03"></script>
-  <script src="/game-stage2-rc2-polish.js?v=rc2-04-03"></script>
-  <script src="/game-stage2-rc2-visual.js?v=rc2-04-03"></script>
-  <script src="/game-stage2-rc2-ui.js?v=rc2-04-03"></script>
-  <script src="/game-stage2-rc2-art.js?v=rc2-04-03"></script>
-  <script src="/game-stage2-rc2-world.js?v=rc2-04-03"></script>
-  <script src="/game-stage2-rc2-camera.js?v=rc2-04-03"></script>
+  <script src="/final-game.js?v=final-1.0"></script>
 </body>
 </html>
