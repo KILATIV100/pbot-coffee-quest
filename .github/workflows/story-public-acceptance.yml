@@ -1,0 +1,57 @@
+name: Story public acceptance
+on:
+  push:
+    branches: [release/final-brovary-universe]
+    paths: [.github/workflows/story-public-acceptance.yml]
+permissions:
+  contents: read
+jobs:
+  public-browser:
+    runs-on: ubuntu-latest
+    timeout-minutes: 8
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: 3066ff41e559c10b65df122826f1ef07c8f787f3
+          persist-credentials: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Browser
+        working-directory: apps/web
+        run: |
+          npm install --no-save playwright@1.57.0
+          npx playwright install --with-deps chromium
+      - name: Actual public build and NPC scenario
+        run: |
+          cat > apps/web/tests/public-story.mjs <<'JS'
+          import {chromium} from 'playwright';
+          import fs from 'node:fs/promises';
+          import crypto from 'node:crypto';
+          import assert from 'node:assert/strict';
+          const base='https://web-production-f3e45.up.railway.app',build='world01-story-20260915-3',out='qa-story-public';await fs.mkdir(out,{recursive:true});
+          let health;
+          for(let n=0;n<40;n++){try{health=await (await fetch(base+'/health')).json();if(health.build===build)break;}catch{}await new Promise(r=>setTimeout(r,3000));}
+          assert.equal(health?.build,build,'new reviewed build must actually be public');
+          const result={build,health,checks:[],errors:[],httpErrors:[]};const sha=b=>crypto.createHash('sha256').update(b).digest('hex');
+          for(const name of ['final-game.js','world01-v2.js','actors-v3.js','story-core.js','story-world01.js','story-world01.css']){const actual=await fetch(base+'/'+name+'?verify=3066ff41');assert.equal(actual.status,200);const a=Buffer.from(await actual.arrayBuffer()),expected=await fs.readFile('apps/web/public/'+name);assert.equal(sha(a),sha(expected),name+' served bytes');result.checks.push({name,sha256:sha(a)});}
+          const browser=await chromium.launch();let page;
+          const open=async opts=>{const c=await browser.newContext(opts);page=await c.newPage();page.on('pageerror',e=>result.errors.push(String(e)));page.on('response',r=>{if(r.status()>=400)result.httpErrors.push(r.url())});await page.goto(base+'/?review='+build,{waitUntil:'networkidle'});assert.equal(await page.locator('meta[name=build]').getAttribute('content'),build);return c;};
+          const shot=async name=>page.screenshot({path:out+'/'+name+'.png'});
+          try{
+            let context=await open({viewport:{width:1440,height:900}});await page.locator('#playFirst').click();await page.locator('#storyDialog').waitFor({state:'visible'});await shot('public-intro-desktop');await page.getByRole('button',{name:'Рушаймо',exact:true}).click();
+            await page.keyboard.down('ArrowRight');await page.locator('#interactBtn').waitFor({state:'visible',timeout:8000});await page.keyboard.up('ArrowRight');await page.keyboard.press('KeyF');await page.locator('#storyDialog').waitFor({state:'visible'});assert.equal(await page.locator('#dialogName').textContent(),'Бариста PerkUp');await shot('public-perkup-dialog');await page.getByRole('button',{name:'Допоможу',exact:true}).click();
+            await page.keyboard.down('ArrowRight');await page.waitForFunction(()=>parseInt(document.querySelector('#beans').textContent)>=8,null,{timeout:5000});await page.keyboard.up('ArrowRight');await page.waitForTimeout(250);await page.keyboard.down('ArrowLeft');await page.locator('#interactBtn').waitFor({state:'visible',timeout:6000});await page.keyboard.up('ArrowLeft');await page.keyboard.press('KeyF');await page.getByRole('button',{name:'Передати зерна й забрати заряд',exact:true}).click();assert((await page.locator('#questTracker').textContent()).includes('редактором NEWS'));await shot('public-first-quest-complete');
+            await page.reload({waitUntil:'networkidle'});assert.equal((await page.locator('#bankTokens').textContent()).trim(),'1');await page.locator('#resumeBtn').click();await page.waitForTimeout(250);assert((await page.locator('#questTracker').textContent()).includes('редактором NEWS'));await page.keyboard.press('KeyJ');await page.locator('#questJournal').waitFor({state:'visible'});await shot('public-journal');await page.keyboard.press('Escape');result.checks.push({name:'real keyboard PerkUp accept, collect, return, hand-in, reload, one reward and journal',pass:true});await context.close();
+            context=await open({viewport:{width:844,height:390},deviceScaleFactor:2,hasTouch:true,isMobile:true});await page.locator('#playFirst').tap();await page.getByRole('button',{name:'Рушаймо',exact:true}).tap();const right=await page.locator('[data-key=right]').boundingBox();await page.mouse.move(right.x+right.width/2,right.y+right.height/2);await page.mouse.down();await page.locator('#interactBtn').waitFor({state:'visible',timeout:8000});await page.mouse.up();await page.locator('#interactBtn').tap();await page.locator('#storyDialog').waitFor({state:'visible'});await shot('public-npc-mobile');const card=await page.locator('.dialog-card').boundingBox();assert(card.y>=0&&card.y+card.height<=390);const canvas=await page.locator('#game').boundingBox();assert(Math.abs(canvas.width/canvas.height-16/9)<.02);await page.getByRole('button',{name:'Допоможу',exact:true}).tap();await page.locator('#questTracker').tap();await shot('public-journal-mobile');await page.locator('#journalClose').tap();result.checks.push({name:'touch-sized entry, movement, NPC accept, journal and 16:9 layout',pass:true});await context.close();
+            assert.deepEqual(result.errors,[]);assert.deepEqual(result.httpErrors,[]);result.pass=true;
+          }catch(e){result.pass=false;result.failure=String(e);if(page&&!page.isClosed())await shot('failure').catch(()=>{});process.exitCode=1;}
+          finally{await fs.writeFile(out+'/result.json',JSON.stringify(result,null,2));console.log(JSON.stringify(result,null,2));await browser.close();}
+          JS
+          node apps/web/tests/public-story.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: story-public-acceptance
+          path: qa-story-public/
+          retention-days: 7
