@@ -2,14 +2,14 @@ name: World 01 story and actors QA
 on:
   push:
     branches: [fix/story-actors-world01]
-    paths: ['apps/web/**', 'tools/integrate_story.py', '.github/workflows/story-world01-qa.yml']
+    paths: ['apps/web/**', '.github/workflows/story-world01-qa.yml']
   pull_request:
-    paths: ['apps/web/**']
+    paths: ['apps/web/**', '.github/workflows/story-world01-qa.yml']
 permissions:
-  contents: write
+  contents: read
 concurrency:
   group: story-qa-${{ github.ref }}
-  cancel-in-progress: false
+  cancel-in-progress: true
 jobs:
   browser:
     runs-on: ubuntu-latest
@@ -17,41 +17,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: ${{ github.head_ref || github.ref_name }}
-      - name: Apply reviewed repairs before browser acceptance
-        run: |
-          python3 tools/integrate_story.py
-          python3 - <<'PY'
-          from pathlib import Path
-          p=Path('apps/web/public')
-          f=p/'story-world01.js';s=f.read_text();s=s.replace('c.ellipse(3238,437-j*10,36+j*5,10,0,Math.PI*2)','c.ellipse(3238,437-j*10,36+j*5,10,0,0,Math.PI*2)');f.write_text(s)
-          f=p/'actors-v3.js';s=f.read_text()
-          if 'Remove disconnected matte fragments' not in s:
-            s=s.replace('  let bottom=0;','''  // Remove disconnected matte fragments before measuring the shared foot anchor.
-            const foreground=new Uint8Array(w*h);
-            for(let start=0;start<w*h;start++){
-              if(seen[start]||foreground[start])continue;head=0;tail=0;queue[tail++]=start;foreground[start]=1;
-              const push=n=>{if(!seen[n]&&!foreground[n]){foreground[n]=1;queue[tail++]=n;}};
-              while(head<tail){const n=queue[head++],xx=n%w,yy=Math.floor(n/w);if(xx)push(n-1);if(xx<w-1)push(n+1);if(yy)push(n-w);if(yy<h-1)push(n+w);}
-              if(tail<24)for(let j=0;j<tail;j++)seen[queue[j]]=1;
-            }
-            let bottom=0;''')
-            s=s.replace('Math.sin(phase)*.18','Math.sin(phase)*.24').replace('Math.sin(phase)*.16','Math.sin(phase)*.23')
-            s=s.replace('result.push(normalize(bent,bent.width/2,bent.height,.37))','result.push(normalize(bent,bent.width/2,bent.height,.34))')
-            s=s.replace('frames.pbot.push(normalize(c,heads[n]-edges[n],bottom,1.21));','''let pose=c;
-            if(n===6){pose=cv(c.width,c.height);const z=pose.getContext('2d'),split=113,shift=Math.max(0,bottom-split)*.45;z.drawImage(c,0,0,c.width,split,0,shift,c.width,split);z.drawImage(c,0,split,c.width,bottom-split,0,split+shift,c.width,bottom-split-shift);}
-            frames.pbot.push(normalize(pose,heads[n]-edges[n],bottom,1.21));''')
-            f.write_text(s)
-          f=p/'world01-v2.js';s=f.read_text();s=s.replace("if(d[0]==='checkpoint')continue;image(c,...d);","if(d[0]==='checkpoint')continue;if(d[0]==='portal'&&s.quest?.phase<7)image(c,...d,{alpha:.42});else image(c,...d);");f.write_text(s)
-          f=Path('apps/web/tests/actor-visual.mjs');s=f.read_text().replace('data[(y*160+xx)*4+3]>200','data[(y*160+xx)*4+3]>32');f.write_text(s)
-          PY
-          git config user.name 'P-BOT build'
-          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
-          git add apps/web
-          if ! git diff --cached --quiet; then
-            git commit -m 'fix(world01): terminal rendering, clean foot anchors and closed portal feedback'
-            git push origin HEAD:${{ github.head_ref || github.ref_name }}
-          fi
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
