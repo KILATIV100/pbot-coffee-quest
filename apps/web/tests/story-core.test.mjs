@@ -1,0 +1,16 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+await import('../public/story-core.js');
+const Q=globalThis.PBOT_QUESTS;
+test('fresh story starts with PerkUp, not a fake completed quest',()=>{assert.equal(Q.clean().phase,0);assert.equal(Q.objective(Q.clean())[2],'coffee');});
+test('cannot turn in beans before accepting the quest',()=>assert.equal(Q.transition(Q.clean(),'handin-coffee',{beans:50}).changed,false));
+test('eight collected beans are required',()=>{let q=Q.transition(Q.clean(),'accept-coffee').q;assert.equal(Q.transition(q,'handin-coffee',{beans:7}).changed,false);assert.equal(Q.transition(q,'handin-coffee',{beans:8}).q.phase,2);});
+test('a repeated claim cannot issue a reward',()=>{let q=Q.transition(Q.clean(),'accept-coffee').q;q=Q.transition(q,'handin-coffee',{beans:8}).q;assert.equal(Q.transition(q,'handin-coffee',{beans:50}).reward,null);});
+test('shards cannot be collected before the NEWS mission',()=>assert.equal(Q.transition(Q.clean(),'shard:notice').changed,false));
+test('unknown and repeated shard IDs cannot advance the count',()=>{let q={...Q.clean(),phase:3};assert.equal(Q.transition(q,'shard:bogus').changed,false);q=Q.transition(q,'shard:notice').q;assert.equal(Q.transition(q,'shard:notice').changed,false);assert.equal(q.shards.length,1);});
+test('NEWS requires all three unique fragments',()=>{let q={...Q.clean(),phase:3};for(const id of ['notice','route'])q=Q.transition(q,'shard:'+id).q;assert.equal(Q.transition(q,'handin-news').changed,false);q=Q.transition(q,'shard:signature').q;assert.equal(Q.transition(q,'handin-news').q.phase,4);});
+test('parcel requires acceptance and cannot be redeemed twice',()=>{let q={...Q.clean(),phase:4,shards:Q.SHARDS.map(s=>s.id)};assert.equal(Q.transition(q,'parcel').changed,false);q=Q.transition(q,'accept-shoes').q;assert.equal(Q.transition(q,'handin-shoes').changed,false);q=Q.transition(q,'parcel').q;q=Q.transition(q,'handin-shoes').q;assert.equal(q.phase,6);assert.equal(Q.transition(q,'handin-shoes').reward,null);});
+test('terminal cannot be activated early',()=>{assert.equal(Q.transition(Q.clean(),'activate').changed,false);assert.equal(Q.transition({...Q.clean(),phase:6,shards:Q.SHARDS.map(s=>s.id),parcel:true},'activate').q.phase,7);});
+test('save sanitation rejects corrupt and incoherent states',()=>{assert.equal(Q.clean({phase:7}).phase,3);assert.deepEqual(Q.clean({phase:3,shards:['notice','notice','fake']}).shards,['notice']);assert.equal(Q.clean(null).phase,0);});
+test('reducers do not mutate the input save snapshot',()=>{const q={...Q.clean(),phase:3};Q.transition(q,'shard:notice');assert.deepEqual(q.shards,[]);});
+test('complete ordered scenario grants exactly three distinct quest rewards',()=>{let q=Q.clean();const rewards=[];const cmds=['intro','accept-coffee','handin-coffee','accept-news',...Q.SHARDS.map(s=>'shard:'+s.id),'handin-news','accept-shoes','parcel','handin-shoes','activate'];for(const cmd of cmds){let r=Q.transition(q,cmd,{beans:8});q=r.q;if(r.reward)rewards.push(r.reward);}assert.equal(q.phase,7);assert.deepEqual(rewards,['coffee','news','shoes']);});
