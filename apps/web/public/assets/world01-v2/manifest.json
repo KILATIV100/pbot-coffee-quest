@@ -1,0 +1,282 @@
+{
+  "perkup": {
+    "file": "perkup.webp",
+    "size": [
+      392,
+      248
+    ]
+  },
+  "charme": {
+    "file": "charme.webp",
+    "size": [
+      431,
+      238
+    ]
+  },
+  "billboard": {
+    "file": "billboard.webp",
+    "size": [
+      309,
+      221
+    ]
+  },
+  "bench": {
+    "file": "bench.webp",
+    "size": [
+      216,
+      101
+    ]
+  },
+  "lamp": {
+    "file": "lamp.webp",
+    "size": [
+      145,
+      234
+    ]
+  },
+  "flower-strip": {
+    "file": "flower-strip.webp",
+    "size": [
+      729,
+      99
+    ]
+  },
+  "tree": {
+    "file": "tree.webp",
+    "size": [
+      279,
+      330
+    ]
+  },
+  "pink-tree": {
+    "file": "pink-tree.webp",
+    "size": [
+      262,
+      308
+    ]
+  },
+  "cypress": {
+    "file": "cypress.webp",
+    "size": [
+      178,
+      330
+    ]
+  },
+  "bush": {
+    "file": "bush.webp",
+    "size": [
+      141,
+      130
+    ]
+  },
+  "curb": {
+    "file": "curb.webp",
+    "size": [
+      724,
+      36
+    ]
+  },
+  "crate": {
+    "file": "crate.webp",
+    "size": [
+      144,
+      158
+    ]
+  },
+  "barrier": {
+    "file": "barrier.webp",
+    "size": [
+      263,
+      177
+    ]
+  },
+  "checkpoint": {
+    "file": "checkpoint.webp",
+    "size": [
+      163,
+      191
+    ]
+  },
+  "bean": {
+    "file": "bean.webp",
+    "size": [
+      73,
+      83
+    ]
+  },
+  "coin": {
+    "file": "coin.webp",
+    "size": [
+      97,
+      101
+    ]
+  },
+  "battery": {
+    "file": "battery.webp",
+    "size": [
+      149,
+      179
+    ]
+  },
+  "finish": {
+    "file": "finish.webp",
+    "size": [
+      394,
+      235
+    ]
+  },
+  "ground": {
+    "file": "ground.webp",
+    "size": [
+      227,
+      83
+    ]
+  },
+  "stop": {
+    "file": "stop.webp",
+    "size": [
+      256,
+      182
+    ]
+  },
+  "planter": {
+    "file": "planter.webp",
+    "size": [
+      161,
+      95
+    ]
+  },
+  "bridge": {
+    "file": "bridge.webp",
+    "size": [
+      332,
+      202
+    ]
+  },
+  "scaffold": {
+    "file": "scaffold.webp",
+    "size": [
+      146,
+      184
+    ]
+  },
+  "news": {
+    "file": "news.webp",
+    "size": [
+      138,
+      159
+    ]
+  },
+  "portal": {
+    "file": "portal.webp",
+    "size": [
+      246,
+      187
+    ]
+  },
+  "water": {
+    "file": "water.webp",
+    "size": [
+      226,
+      134
+    ]
+  },
+  "perky": {
+    "file": "perky.webp",
+    "size": [
+      302,
+      467
+    ]
+  },
+  "perky-hint": {
+    "file": "perky-hint.webp",
+    "size": [
+      339,
+      400
+    ]
+  },
+  "hero": {
+    "file": "hero.webp",
+    "size": [
+      206,
+      541
+    ]
+  },
+  "hero-jump": {
+    "file": "hero-jump.webp",
+    "size": [
+      269,
+      437
+    ]
+  },
+  "npc-shoes": {
+    "file": "npc-shoes.webp",
+    "size": [
+      169,
+      336
+    ]
+  },
+  "npc-news": {
+    "file": "npc-news.webp",
+    "size": [
+      168,
+      320
+    ]
+  },
+  "npc-coffee": {
+    "file": "npc-coffee.webp",
+    "size": [
+      147,
+      343
+    ]
+  },
+  "drone": {
+    "file": "drone.webp",
+    "size": [
+      285,
+      205
+    ]
+  },
+  "drone-alert": {
+    "file": "drone-alert.webp",
+    "size": [
+      341,
+      218
+    ]
+  },
+  "spam": {
+    "file": "spam.webp",
+    "size": [
+      246,
+      221
+    ]
+  },
+  "spam-attack": {
+    "file": "spam-attack.webp",
+    "size": [
+      264,
+      212
+    ]
+  },
+  "spam-hurt": {
+    "file": "spam-hurt.webp",
+    "size": [
+      197,
+      194
+    ]
+  },
+  "scooter": {
+    "file": "scooter.webp",
+    "size": [
+      239,
+      205
+    ]
+  },
+  "scooter-attack": {
+    "file": "scooter-attack.webp",
+    "size": [
+      285,
+      205
+    ]
+  }
+}

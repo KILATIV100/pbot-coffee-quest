@@ -7,7 +7,7 @@ if(!shell)return;
 const fx=document.createElement('div');fx.className='release-fx';fx.innerHTML=`<div class="screen-flash"></div><div class="world-intro"><small>P-BOT · BROVARY UNIVERSE</small><b></b><span></span></div><div class="boss-hud hidden"><div><small>THE OFFICIAL</small><b>БЮРОКРАТИЧНИЙ БУЛЬДОЗЕР</b></div><i><span></span></i></div>`;shell.appendChild(fx);
 const flash=fx.querySelector('.screen-flash'), intro=fx.querySelector('.world-intro'), introTitle=intro.querySelector('b'), introMeta=intro.querySelector('span'), bossHud=fx.querySelector('.boss-hud'), bossFill=bossHud.querySelector('i span');
 
-let audioCtx=null,master=null,musicGain=null,sfxGain=null,muted=localStorage.getItem('pbot-muted')==='1',musicTimer=0,lastWorld='',lastLevel='',lastLives=lives?.textContent,lastBeans=beans?.textContent,lastTokens=tokens?.textContent;
+let audioCtx=null,master=null,musicGain=null,sfxGain=null,muted=(()=>{try{return localStorage.getItem('pbot-muted')==='1'}catch{return false}})(),musicTimer=0,lastWorld='',lastLevel='',lastLives=lives?.textContent,lastBeans=beans?.textContent,lastTokens=tokens?.textContent;
 const AudioCtx=window.AudioContext||window.webkitAudioContext;
 
 function ensureAudio(){
@@ -24,7 +24,7 @@ function rumble(ms=35){try{navigator.vibrate?.(ms)}catch{}}
 function pulseFlash(cls){flash.className='screen-flash '+cls;requestAnimationFrame(()=>flash.classList.add('on'));setTimeout(()=>flash.className='screen-flash',220)}
 function showIntro(){if(!level||!world)return;const code=level.textContent||'',name=world.textContent||'';if(code===lastLevel&&name===lastWorld)return;lastLevel=code;lastWorld=name;introTitle.textContent=`${code} · ${name}`;introMeta.textContent=code==='15-03'?'ФІНАЛ · THE OFFICIAL':'НОВИЙ СЕКТОР';intro.classList.remove('show');void intro.offsetWidth;intro.classList.add('show');setTimeout(()=>intro.classList.remove('show'),2400);if(code==='15-03'){bossHud.classList.remove('hidden');bossFill.style.width='100%';sfx('boss')}else bossHud.classList.add('hidden')}
 
-const mute=document.createElement('button');mute.id='audioBtn';mute.className='hud-round audio-btn';mute.setAttribute('aria-label','Звук');mute.textContent=muted?'🔇':'🔊';const hudRight=shell.querySelector('.hud-right');hudRight?.prepend(mute);mute.addEventListener('click',e=>{e.stopPropagation();ensureAudio();muted=!muted;localStorage.setItem('pbot-muted',muted?'1':'0');if(master)master.gain.setTargetAtTime(muted?0:.65,audioCtx.currentTime,.03);mute.textContent=muted?'🔇':'🔊';sfx('ui')});
+const mute=document.createElement('button');mute.id='audioBtn';mute.className='hud-round audio-btn';mute.setAttribute('aria-label','Звук');mute.textContent=muted?'🔇':'🔊';const hudRight=shell.querySelector('.hud-right');hudRight?.prepend(mute);mute.addEventListener('click',e=>{e.stopPropagation();ensureAudio();muted=!muted;try{localStorage.setItem('pbot-muted',muted?'1':'0')}catch{};if(master)master.gain.setTargetAtTime(muted?0:.65,audioCtx.currentTime,.03);mute.textContent=muted?'🔇':'🔊';sfx('ui')});
 
 ['pointerdown','keydown','touchstart'].forEach(ev=>addEventListener(ev,ensureAudio,{once:true,passive:true}));
 shell.addEventListener('pointerdown',()=>sfx('ui'));
