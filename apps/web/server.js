@@ -50,7 +50,7 @@ const server = http.createServer(async(req,res)=>{
 
   if(pathname === '/health'){
     res.writeHead(200, commonHeaders({'content-type':'application/json; charset=utf-8','cache-control':'no-store'}));
-    return res.end(JSON.stringify({ok:true,service:'pbot-web',stage2:true,viewport:'960x540',deployment:process.env.RAILWAY_DEPLOYMENT_ID || null}));
+    return res.end(JSON.stringify({ok:true,service:'pbot-web',stage2:true,build:'world01-art-20260915-2',viewport:'960x540',deployment:process.env.RAILWAY_DEPLOYMENT_ID || null}));
   }
   if(pathname === '/api' || pathname.startsWith('/api/')) return proxyApi(req,res);
   if(pathname === '/config.js'){
