@@ -86,7 +86,7 @@ nav button {
 }
 #toast {
   position: absolute;
-  top: 27%;
+  top: 18px;
   left: 50%;
   transform: translateX(-50%);
   text-align: center;
@@ -238,5 +238,76 @@ dialog p {
 @media (prefers-reduced-motion: reduce) {
   * {
     scroll-behavior: auto;
+  }
+}
+/* One compact, legible objective surface; the world stays dominant. */
+header {
+  background: linear-gradient(115deg, #17363de8, #17363d9c);
+  border: 1px solid #d6ddc238;
+  border-left: 3px solid #dfb66b;
+  border-radius: 3px 16px 16px 3px;
+  padding: 13px 17px;
+  box-shadow: 0 8px 30px #122b3620;
+  text-shadow: none;
+  max-width: min(370px, 72vw);
+}
+header small {
+  font-size: 9px;
+  letter-spacing: 2.3px;
+  color: #d1ded5;
+}
+#objective {
+  font-size: 16px;
+  padding: 8px 0 9px;
+}
+#stats {
+  font-size: 11px;
+  color: #e4decd;
+}
+#hint {
+  background: #183b43c9;
+  font-size: 11px;
+}
+#interact {
+  border: 1px solid #ffecb1;
+  background: #edc989;
+  box-shadow: 0 5px 18px #233c4640;
+}
+nav button {
+  border-radius: 30px;
+  padding: 9px 16px;
+  background: #1c3e48ca;
+}
+button {
+  transition:
+    background 0.12s,
+    box-shadow 0.12s;
+}
+#actions {
+  display: grid;
+  grid-template-columns: repeat(2, 86px);
+  align-content: end;
+}
+#touch button {
+  border-radius: 14px;
+  backdrop-filter: blur(4px);
+  border: 1px solid #dae3d665;
+}
+#actions button {
+  font-size: 12px;
+}
+@media (max-width: 600px) {
+  header {
+    padding: 9px 12px;
+    max-width: 72vw;
+  }
+  #objective {
+    font-size: 14px;
+  }
+  #stats {
+    font-size: 10px;
+  }
+  #actions {
+    grid-template-columns: repeat(2, 72px);
   }
 }

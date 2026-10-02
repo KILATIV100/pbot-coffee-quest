@@ -10,9 +10,9 @@ export const NPCS = {
   exit: { x: 0, z: 86, name: "Perky · Портал до парку" },
 };
 export const BEANS = Array.from({ length: 24 }, (_, i) => ({
-  x: ((i % 3) - 1) * 1.9,
-  y: 0.9,
-  z: 9 + Math.floor(i / 3) * 1.8,
+  x: Math.sin(i * 0.53) * 1.65,
+  y: 0.72,
+  z: 8 + i * 0.63,
 }));
 export const SHARDS = [
   { id: "notice", x: -2, y: 1, z: 31 },

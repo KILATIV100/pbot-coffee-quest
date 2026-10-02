@@ -1,4 +1,5 @@
 import { chromium, webkit } from "playwright";
+import { BEANS } from "../src/state.js";
 import assert from "node:assert/strict";
 import { mkdir, writeFile } from "node:fs/promises";
 const out = process.env.QA_OUT || "qa-3d";
@@ -77,7 +78,7 @@ for (const name of (process.env.BROWSERS || "chromium,webkit").split(",")) {
   await page.screenshot({ path: `${out}/${name}-01-street.png` });
   await go(-4, 5);
   await talk("Допоможу");
-  for (const z of [9, 10.8, 12.6, 14.4, 16.2, 18, 19.8, 21.6]) await go(0, z);
+  for (const b of BEANS.slice(0, 8)) await go(b.x, b.z);
   assert.ok((await state()).s.beans.length >= 8);
   await go(-4, 5);
   await talk("Передати зерна");
@@ -156,7 +157,9 @@ for (const name of (process.env.BROWSERS || "chromium,webkit").split(",")) {
   await mobile
     .locator('[data-key="KeyW"]')
     .dispatchEvent("pointerdown", { pointerId: 1 });
-  await mobile.waitForFunction(() => __PBOT3D__.position().z > 2, null, {timeout: 20000});
+  await mobile.waitForFunction(() => __PBOT3D__.position().z > 2, null, {
+    timeout: 20000,
+  });
   await mobile
     .locator('[data-key="KeyW"]')
     .dispatchEvent("pointerup", { pointerId: 1 });

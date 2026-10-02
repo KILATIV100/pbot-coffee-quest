@@ -1,4 +1,6 @@
 import * as T from "three";
+import { createActor } from "./characters.js";
+import { buildPlaza } from "./plaza.js";
 import { NPCS, BEANS, SHARDS, PARCEL, PLATFORMS, ENEMIES } from "./state.js";
 const mats = new Map();
 const material = (c) => {
@@ -46,95 +48,10 @@ export function label(p, text, x, y, z, color = "#fff3d2", width = 4) {
   p.add(m);
   return m;
 }
-export function actor(type = "pbot", npc = false) {
-  const g = new T.Group(),
-    robot = type === "pbot";
-  const shirt = npc ? "#ba8061" : "#202b31";
-  cyl(g, shirt, 0, 0.87, 0, 0.32, 0.65);
-  if (robot) {
-    const head = ball(g, "#1b2d33", 0, 1.43, 0, 0.43);
-    head.scale.z = 0.85;
-    const trim = mesh(
-      new T.TorusGeometry(0.33, 0.026, 8, 32),
-      "#eeb548",
-      0,
-      1.44,
-      0.28,
-      g,
-    );
-    const face = mesh(
-      new T.CircleGeometry(0.31, 32),
-      "#082d36",
-      0,
-      1.44,
-      0.3,
-      g,
-    );
-    for (const x of [-0.12, 0.12]) {
-      const eye = mesh(
-        new T.TorusGeometry(0.065, 0.018, 5, 12, Math.PI),
-        "#4af3ea",
-        x,
-        1.46,
-        0.32,
-        g,
-      );
-    }
-    const smile = mesh(
-      new T.TorusGeometry(0.062, 0.014, 5, 12, Math.PI),
-      "#4af3ea",
-      0,
-      1.35,
-      0.325,
-      g,
-    );
-    smile.rotation.z = Math.PI;
-    for (const side of [-1, 1]) {
-      const ear = cyl(g, "#dfa73b", side * 0.43, 1.44, 0, 0.16, 0.12);
-      ear.rotation.z = Math.PI / 2;
-      const pad = cyl(g, "#f8d475", side * 0.5, 1.44, 0, 0.11, 0.035);
-      pad.rotation.z = Math.PI / 2;
-    }
-    const tuft = mesh(
-      new T.ConeGeometry(0.095, 0.27, 7),
-      "#40e3e2",
-      0,
-      1.94,
-      0,
-      g,
-    );
-    tuft.rotation.z = -0.2;
-    box(g, "#edb441", 0, 0.9, 0.32, 0.024, 0.45, 0.025);
-    for (const x of [-0.07, 0.07])
-      box(g, "#e6c275", x, 1.05, 0.31, 0.018, 0.18, 0.025);
-  } else {
-    ball(g, "#d6a078", 0, 1.43, 0, 0.25);
-    const hair = ball(g, "#3a2f30", 0, 1.6, -0.03, 0.24);
-    hair.scale.y = 0.65;
-    box(g, "#192930", 0, 1.45, 0.23, 0.38, 0.08, 0.05);
-  }
-  const limbs = [];
-  for (const side of [-1, 1]) {
-    const leg = new T.Group();
-    leg.position.set(side * 0.18, 0.6, 0);
-    g.add(leg);
-    cyl(leg, shirt, 0, -0.23, 0, 0.105, 0.42, 8);
-    box(leg, "#e7b654", 0, -0.47, 0.06, 0.25, 0.16, 0.36);
-    box(leg, "#73e2cd", 0, -0.54, 0.08, 0.25, 0.025, 0.35);
-    limbs.push(leg);
-    const arm = new T.Group();
-    arm.position.set(side * 0.35, 1.1, 0);
-    g.add(arm);
-    cyl(arm, shirt, 0, -0.18, 0, 0.105, 0.4, 8);
-    cyl(arm, "#e5b652", 0, -0.32, 0, 0.11, 0.045, 8);
-    ball(arm, npc ? "#e8bf8a" : "#263b3f", 0, -0.4, 0, 0.12);
-    limbs.push(arm);
-  }
-  g.userData.limbs = limbs;
-  return g;
-}
+export const actor = createActor;
 export function buildWorld(scene) {
-  const solid = [];
+  const plaza = buildPlaza(scene);
+  const solid = [...plaza.solid];
   function building(x, z, w, d, h, c, name) {
     box(scene, c, x, h / 2, z, w, h, d).userData.cameraSolid = true;
     solid.push({ x, z, w, d, h, y: h / 2 });
@@ -175,13 +92,13 @@ export function buildWorld(scene) {
     }
   }
   box(scene, "#92a99a", 0, -0.6, 43, 100, 1, 140);
-  box(scene, "#b6b7a3", 0, -0.08, 44, 15, 0.16, 104);
-  box(scene, "#718e86", 0, 0.005, 44, 7.5, 0.05, 104);
-  for (let z = -5; z < 95; z += 3) {
+  box(scene, "#b6b7a3", 0, -0.08, 61, 15, 0.16, 70);
+  box(scene, "#718e86", 0, 0.005, 61, 7.5, 0.05, 70);
+  for (let z = 27; z < 95; z += 3) {
     box(scene, "#d9d4b6", -4, 0.04, z, 0.16, 0.08, 2.3);
     box(scene, "#d9d4b6", 4, 0.04, z, 0.16, 0.08, 2.3);
   }
-  for (let z = 0; z < 92; z += 8) {
+  for (let z = 32; z < 92; z += 8) {
     for (const s of [-1, 1]) {
       box(scene, "#c9c7ac", s * 6, 0.04, z, 3.5, 0.08, 7.8);
       if (z % 16 === 0) {
@@ -191,10 +108,10 @@ export function buildWorld(scene) {
       }
     }
   }
-  building(-10, 8, 7, 8, 8, "#cf9a7a", "PerkUp");
+
   building(10, 27, 6, 6, 5, "#91aeb0", "NEWS");
   building(-10, 50, 7, 7, 9, "#afada7", "CHARME");
-  for (let i = 0; i < 8; i++) {
+  for (let i = 3; i < 8; i++) {
     const x = i % 2 ? -17 : 17,
       z = i * 13 - 6;
     building(
@@ -206,7 +123,7 @@ export function buildWorld(scene) {
       ["#c2b093", "#8ca3a5", "#af8e82"][i % 3],
     );
   }
-  for (let i = 0; i < 14; i++) {
+  for (let i = 5; i < 14; i++) {
     const x = i % 2 ? -8 : 8,
       z = i * 7 - 5;
     if ([8, 27, 50].some((v) => Math.abs(v - z) < 5)) continue;
@@ -264,7 +181,7 @@ export function buildWorld(scene) {
   for (const x of [2.6, 6.4])
     for (const z of [54.2, 56.8])
       cyl(scene, "#526c6e", x, 1.4, z, 0.06, 2.8, 6);
-  for (const z of [15, 58, 77]) {
+  for (const z of [58, 77]) {
     box(scene, "#946d53", -5.8, 0.52, z, 1.5, 0.13, 0.6);
     box(scene, "#af805a", -6, 0.95, z, 0.14, 0.7, 1.8);
     for (const zz of [z - 0.5, z + 0.5])
@@ -277,15 +194,16 @@ export function buildWorld(scene) {
     g.position.set(n.x, 0, n.z);
     scene.add(g);
     npcs[id] = g;
-    label(
-      scene,
-      id === "coffee" ? "PerkUp" : id === "news" ? "NEWS" : "CHARME",
-      n.x,
-      2.2,
-      n.z,
-      undefined,
-      2,
-    );
+    if (id !== "coffee")
+      label(
+        scene,
+        id === "coffee" ? "PerkUp" : id === "news" ? "NEWS" : "CHARME",
+        n.x,
+        2.2,
+        n.z,
+        undefined,
+        2,
+      );
   }
   box(scene, "#284b56", 0, 0.8, 68, 1, 1.6, 0.65);
   box(scene, "#80d3bd", 0, 1.2, 67.65, 0.7, 0.45, 0.06);
@@ -385,6 +303,7 @@ export function buildWorld(scene) {
     if (o.userData.cameraSolid) cameraSolids.push(o);
   });
   return {
+    npcs,
     cameraSolids,
     solid,
     beans,

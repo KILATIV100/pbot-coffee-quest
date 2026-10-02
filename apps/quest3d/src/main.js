@@ -17,6 +17,8 @@ import {
   ENEMIES,
 } from "./state.js";
 import { actor, buildWorld, mesh } from "./art.js";
+import { createParticles } from "./particles.js";
+import { animateActor } from "./characters.js";
 import "./style.css";
 const $ = (s) => document.querySelector(s),
   canvas = $("#world"),
@@ -59,6 +61,8 @@ let jump = false,
   camera,
   fx;
 let crouched = false;
+let particles,
+  footstep = 0;
 let lost = false;
 const metrics = {
   frames: 0,
@@ -432,8 +436,11 @@ function update(dt) {
   const speed = (5 + s.upgrades.speed * 0.55) * (crouch ? 0.5 : 1);
   const friction = move.lengthSq() ? 14 : s.q.phase >= 6 ? 23 : 8;
   velocity.lerp(move.multiplyScalar(speed), 1 - Math.exp(-friction * dt));
+  let jumpVisual = false;
+  const wasGrounded = grounded;
   if (jump) {
     if (grounded || jumps < 2) {
+      jumpVisual = true;
       vy = 6.2 + s.upgrades.jump * 0.35;
       jumps++;
       grounded = false;
@@ -459,12 +466,20 @@ function update(dt) {
   }
   world.step();
   const pos = body.translation();
+  if (grounded && !wasGrounded)
+    particles?.burst(pos.x, 0.15, pos.z, "dust", 12);
+  footstep += velocity.length() * dt;
+  if (grounded && footstep > 0.95) {
+    footstep = 0;
+    particles?.burst(pos.x, 0.08, pos.z, "dust", 3);
+  }
   if (pos.y < -5) respawn();
   const dist = (x, y, z) => Math.hypot(pos.x - x, pos.y - y, pos.z - z);
   let dirty = false;
   BEANS.forEach((b, i) => {
     if (!s.beans.includes(i) && dist(b.x, b.y, b.z) < 0.8) {
       s.beans.push(i);
+      particles?.burst(b.x, b.y, b.z, "gold", 12);
       dirty = true;
     }
   });
@@ -529,16 +544,25 @@ function update(dt) {
   $("#interact").hidden = !near || s.complete;
   $("#interact").textContent = near ? "F · " + NPCS[near].name : "";
   player.position.set(pos.x, pos.y - (crouched ? 0.62 : 0.86), pos.z);
-  player.scale.y = crouch ? 0.72 : 1;
-  if (velocity.length() > 0.2)
-    player.rotation.y = Math.atan2(velocity.x, velocity.z);
-  player.userData.limbs.forEach(
-    (l, i) =>
-      (l.rotation.x = grounded
-        ? Math.sin(s.time * 12 + (i % 2) * Math.PI) *
-          Math.min(0.55, velocity.length() * 0.12)
-        : 0.25),
-  );
+  player.scale.y = 1;
+  if (velocity.length() > 0.2) {
+    const targetYaw = Math.atan2(velocity.x, velocity.z);
+    const delta = Math.atan2(
+      Math.sin(targetYaw - player.rotation.y),
+      Math.cos(targetYaw - player.rotation.y),
+    );
+    player.rotation.y += delta * (1 - Math.exp(-13 * dt));
+  }
+  animateActor(player, {
+    dt,
+    time: s.time,
+    speed: velocity.length(),
+    grounded,
+    vy,
+    crouch,
+    jumpEvent: jumpVisual,
+    jumpCount: jumps,
+  });
   player.visible = inv <= 0 || Math.floor(inv * 12) % 2 === 0;
   saveTimer += dt;
   if (dirty || saveTimer > 3) {
@@ -546,12 +570,17 @@ function update(dt) {
     save();
   }
 }
+const cameraLook = new T.Vector3(0, 1.2, 1);
 function render(dt) {
   const pos = body.translation(),
-    target = new T.Vector3(pos.x, pos.y + 1, pos.z);
+    target = new T.Vector3(
+      pos.x,
+      1.2 + Math.max(0, pos.y - 0.87) * 0.45,
+      pos.z,
+    );
   let desired = target
     .clone()
-    .add(new T.Vector3(Math.sin(angle) * 8, 5, Math.cos(angle) * 8));
+    .add(new T.Vector3(Math.sin(angle) * 6.5, 2.15, Math.cos(angle) * 6.5));
   const ray = new T.Raycaster(
     target,
     desired.clone().sub(target).normalize(),
@@ -565,10 +594,16 @@ function render(dt) {
       .add(
         ray.ray.direction
           .clone()
-          .multiplyScalar(Math.max(2, hits[0].distance - 0.3)),
+          .multiplyScalar(Math.max(0.6, hits[0].distance - 0.35)),
       );
-  camera.position.lerp(desired, 1 - Math.exp(-8 * dt));
-  camera.lookAt(target);
+  if (
+    hits.length &&
+    camera.position.distanceTo(target) > desired.distanceTo(target)
+  )
+    camera.position.copy(desired);
+  else camera.position.lerp(desired, 1 - Math.exp(-7 * dt));
+  cameraLook.lerp(target, 1 - Math.exp(-12 * dt));
+  camera.lookAt(cameraLook);
   BEANS.forEach((b, i) => {
     view.beans[i].visible = !s.beans.includes(i);
     view.beans[i].rotation.y = s.time * 1.4;
@@ -586,6 +621,8 @@ function render(dt) {
   view.token.visible = !s.receipts.includes("route");
   view.token.rotation.y = s.time;
   view.portal.material.opacity = s.q.phase >= 7 ? 0.55 : 0.08;
+  for (const n of Object.values(view.npcs || {}))
+    animateActor(n, { dt, time: s.time, speed: 0, grounded: true });
   view.perky.position.y = 1.8 + Math.sin(s.time * 2) * 0.15;
   fx.userData.life = Math.max(0, (fx.userData.life || 0) - dt);
   fx.visible = fx.userData.life > 0;
@@ -599,6 +636,7 @@ function render(dt) {
     toastTime -= dt;
     if (toastTime <= 0) $("#toast").textContent = "";
   }
+  particles?.update(paused ? 0 : dt);
   renderer.render(scene, camera);
   metrics.drawCalls = renderer.info.render.calls;
   metrics.triangles = renderer.info.render.triangles;
@@ -616,27 +654,32 @@ async function bootGame() {
     renderer.outputColorSpace = T.SRGBColorSpace;
     renderer.toneMapping = T.ACESFilmicToneMapping;
     scene = new T.Scene();
-    scene.background = new T.Color("#acc6c0");
-    scene.fog = new T.Fog("#acc6c0", 25, 85);
-    camera = new T.PerspectiveCamera(55, 1, 0.1, 160);
-    camera.position.set(0, 6, -7);
-    scene.add(new T.HemisphereLight("#fff1d2", "#5d8887", 2.4));
-    const sun = new T.DirectionalLight("#ffe0ae", 3);
+    scene.background = new T.Color("#a9c7d0");
+    scene.fog = new T.Fog("#a9c7d0", 24, 75);
+    camera = new T.PerspectiveCamera(52, 1, 0.1, 160);
+    camera.position.set(0, 4, -5.2);
+    scene.add(new T.HemisphereLight("#d9eff8", "#b89c79", 1.5));
+    const sun = new T.DirectionalLight("#ffe1ae", 3.2);
     sun.position.set(-15, 25, 12);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(2048, 2048);
     Object.assign(sun.shadow.camera, {
-      left: -25,
-      right: 25,
-      top: 30,
-      bottom: -30,
+      left: -15,
+      right: 15,
+      top: 20,
+      bottom: -20,
       near: 1,
       far: 100,
     });
-    sun.shadow.bias = -0.001;
+    sun.shadow.bias = -0.0004;
+    sun.shadow.normalBias = 0.03;
+    const fill = new T.DirectionalLight("#a7d9ee", 0.65);
+    fill.position.set(10, 8, -8);
+    scene.add(fill);
     scene.add(sun);
     scene.add(sun.target);
     view = buildWorld(scene);
+    particles = createParticles(scene);
     replaceActor();
     await RAPIER.init();
     world = new RAPIER.World({ x: 0, y: -18, z: 0 });
@@ -696,11 +739,7 @@ async function bootGame() {
       metrics.frames++;
       metrics.ms += performance.now() - start;
       metrics.maxMs = Math.max(metrics.maxMs, performance.now() - start);
-      sun.position.set(
-        body.translation().x - 15,
-        25,
-        body.translation().z + 12,
-      );
+      sun.position.set(body.translation().x - 8, 16, body.translation().z - 10);
       sun.target.position.set(body.translation().x, 0, body.translation().z);
     });
     if (import.meta.env.DEV)
