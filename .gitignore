@@ -3,3 +3,7 @@ node_modules
 .env.*
 .DS_Store
 npm-debug.log*
+
+apps/quest3d/dist/
+qa-3d/
+qa-visual-v2/
