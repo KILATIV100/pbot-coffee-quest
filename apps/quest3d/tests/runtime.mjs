@@ -14,21 +14,21 @@ await page.getByRole("button", { name: "Грати", exact: true }).click();
 // Physical key events, including airborne second jump and camera-relative lateral input.
 const start = await page.evaluate(() => __PBOT3D__.position());
 await page.keyboard.down("KeyD");
-await page.waitForTimeout(300);
+await page.waitForFunction(x => __PBOT3D__.position().x < x - .6, start.x, {timeout: 20000});
 await page.keyboard.up("KeyD");
 assert.ok((await page.evaluate(() => __PBOT3D__.position())).x < start.x - 0.5);
 await page.keyboard.press("Space");
-await page.waitForTimeout(180);
+await page.waitForFunction(() => __PBOT3D__.position().y > 1.5, null, {timeout: 20000});
 const first = await page.evaluate(() => __PBOT3D__.position().y);
 await page.keyboard.press("Space");
-await page.waitForTimeout(180);
+await page.waitForFunction(y => __PBOT3D__.position().y > y + .4, first, {timeout: 20000});
 assert.ok((await page.evaluate(() => __PBOT3D__.position().y)) > first + 0.4);
-await page.waitForTimeout(1100);
+await page.waitForFunction(() => __PBOT3D__.position().y < .95, null, {timeout: 20000});
 await page.keyboard.down("KeyC");
-await page.waitForTimeout(200);
+await page.waitForFunction(() => __PBOT3D__.position().y < .7, null, {timeout: 20000});
 const crouch = await page.evaluate(() => __PBOT3D__.position().y);
 await page.keyboard.up("KeyC");
-await page.waitForTimeout(200);
+await page.waitForFunction(() => __PBOT3D__.position().y > .8, null, {timeout: 20000});
 assert.ok((await page.evaluate(() => __PBOT3D__.position().y)) > crouch + 0.15);
 const sample = await page.evaluate(async () => {
   const gaps = [];

@@ -156,7 +156,7 @@ for (const name of (process.env.BROWSERS || "chromium,webkit").split(",")) {
   await mobile
     .locator('[data-key="KeyW"]')
     .dispatchEvent("pointerdown", { pointerId: 1 });
-  await mobile.waitForTimeout(550);
+  await mobile.waitForFunction(() => __PBOT3D__.position().z > 2, null, {timeout: 20000});
   await mobile
     .locator('[data-key="KeyW"]')
     .dispatchEvent("pointerup", { pointerId: 1 });
