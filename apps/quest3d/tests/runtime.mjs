@@ -58,6 +58,7 @@ await writeFile(
   ),
 );
 assert.deepEqual(errors, []);
+await page.close();
 const blocked = await browser.newPage();
 await blocked.addInitScript(() => {
   Storage.prototype.setItem = function () {
@@ -67,6 +68,7 @@ await blocked.addInitScript(() => {
 await blocked.goto("http://127.0.0.1:4317");
 await blocked.getByRole("button", { name: "Грати", exact: true }).click();
 assert.ok(await blocked.locator("#toast").textContent());
+await blocked.close();
 const fallback = await browser.newPage();
 await fallback.addInitScript(() => {
   const original = HTMLCanvasElement.prototype.getContext;
@@ -77,6 +79,7 @@ await fallback.addInitScript(() => {
 });
 await fallback.goto("http://127.0.0.1:4317");
 await fallback.locator("#fallback").waitFor({ state: "visible" });
-await fallback.screenshot({ path: "qa-3d/no-webgl.png" });
+// Context-loss fallback screenshots are captured in both engines by playthrough.mjs.
+assert.equal(await fallback.getByRole("button", {name: "Спробувати знову"}).isVisible(), true);
 await browser.close();
 console.log(sample);
