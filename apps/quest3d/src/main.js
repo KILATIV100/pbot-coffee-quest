@@ -714,9 +714,9 @@ async function bootGame() {
         advance: (n = 1) => {
           for (let i = 0; i < Math.min(600, n) && !paused; i++) {
             update(1 / 60);
-            render(1 / 60);
           }
         },
+        renderFrame: () => render(1),
         paused: () => paused,
       };
   } catch (e) {

@@ -61,6 +61,7 @@ for (const name of (process.env.BROWSERS || "chromium,webkit").split(",")) {
         }
         qa.keys.clear();
         qa.advance(12);
+        qa.renderFrame();
         return { i, p: qa.position(), s: qa.state };
       },
       { x, z, jump },

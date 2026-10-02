@@ -7,8 +7,6 @@ on:
         "package-lock.json",
         ".github/workflows/quest3d-qa.yml",
       ]
-  push:
-    branches: [codex/pbot-3d-chapter-one]
 permissions:
   contents: read
 concurrency:
