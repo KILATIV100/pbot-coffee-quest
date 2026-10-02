@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="uk">
+  <meta charset="UTF-8" /><meta
+    name="viewport"
+    content="width=device-width, initial-scale=1, viewport-fit=cover"
+  /><meta name="theme-color" content="#172e37" /><title>
+    P-BOT • Ранок без сигналу — 3D
+  </title>
+  <body>
+    <canvas id="world" aria-label="Тривимірна вулиця Броварів"></canvas>
+    <header>
+      <small>BROVARY UNIVERSE / 01—01</small
+      ><button id="objective" aria-label="Відкрити журнал"></button>
+      <div id="stats"></div>
+    </header>
+    <nav><button id="menu">Ⅱ Меню</button></nav>
+    <div id="toast" role="status"></div>
+    <div id="hint">
+      WASD / стрілки · Space ×2 стрибок · E імпульс · F розмова · drag камера
+    </div>
+    <button id="interact" hidden>F · Поговорити</button>
+    <div id="touch">
+      <div id="pad">
+        <button data-key="KeyW">▲</button>
+        <div>
+          <button data-key="KeyA">◀</button><button data-key="KeyS">▼</button
+          ><button data-key="KeyD">▶</button>
+        </div>
+      </div>
+      <div id="actions">
+        <button data-key="Space">↟ Стрибок</button
+        ><button data-key="KeyE">◎ Pulse</button
+        ><button data-key="KeyC">↓ Присісти</button
+        ><button data-key="KeyR">↺ Камера</button>
+      </div>
+    </div>
+    <dialog id="dialog">
+      <small id="eyebrow">P-BOT COFFEE QUEST • 3D</small>
+      <h1 id="title"></h1>
+      <p id="body"></p>
+      <div id="choices"></div>
+    </dialog>
+    <div id="fallback" hidden>
+      <h1>3D поки недоступне</h1>
+      <p>Браузер не зміг запустити WebGL. Збереження лишилося на пристрої.</p>
+      <button onclick="location.reload()">Спробувати знову</button
+      ><a href="https://web-production-f3e45.up.railway.app/"
+        >Відкрити чинну 2D-гру</a
+      >
+    </div>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>

@@ -1,0 +1,42 @@
+name: P-BOT separate 3D chapter QA
+on:
+  pull_request:
+    paths:
+      [
+        "apps/quest3d/**",
+        "package-lock.json",
+        ".github/workflows/quest3d-qa.yml",
+      ]
+  push:
+    branches: [codex/pbot-3d-chapter-one]
+permissions:
+  contents: read
+concurrency:
+  group: quest3d-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  chapter:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: npm ci --ignore-scripts
+      - run: node --test apps/quest3d/tests/state.test.mjs apps/web/tests/story-core.test.mjs
+      - run: npm --workspace apps/quest3d run build
+      - run: npx playwright install --with-deps chromium webkit
+      - name: Sequential browser playthroughs
+        run: |
+          npm --workspace apps/quest3d run dev > /tmp/pbot3d.log 2>&1 &
+          for i in $(seq 1 30); do curl -fsS http://127.0.0.1:4317/ && break || sleep 1; done
+          node apps/quest3d/tests/playthrough.mjs
+          node apps/quest3d/tests/runtime.mjs
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: pbot3d-evidence-${{ github.sha }}
+          path: qa-3d/
+          retention-days: 14
